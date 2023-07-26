@@ -245,7 +245,7 @@ class local_uniadaptive_external extends external_api {
                         array(
                             'id' => new external_value(PARAM_INT, 'Module ID'),
                             'section' => new external_value(PARAM_INT, 'Section ID'),
-                            'identation' => new external_value(PARAM_INT, 'Indentation level'),
+                            'indent' => new external_value(PARAM_INT, 'Indentation level'),
                             'c' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
                             'lmsVisibility' => new external_value(PARAM_BOOL, 'Visibility'),
                             'order' => new external_value(PARAM_INT, 'Order', VALUE_OPTIONAL),
@@ -298,7 +298,7 @@ class local_uniadaptive_external extends external_api {
                 $DB->update_record('course_modules', (object)array(
                     'id' => $module['id'],
                     'section' => $module['section'],
-                    'indent' => $module['identation'],
+                    'indent' => $module['indent'],
                     'availability' => $conditions,
                     'visible' => $module['lmsVisibility']
                 ));
