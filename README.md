@@ -29,12 +29,14 @@ UNIAdaptiveLTI-Moodle-Plugin is a plugin that allows adding webservice for the c
 - To add the webservice to the lti, you must go to Site administration > Server > Web services > External services > Functions > Add functions.
   The web services that you must add are:
   - local_uniadaptive_get_course_badges
-  - local_uniadaptive_get_course_grade
+  - local_uniadaptive_get_course_grade_with_califications
+  - local_uniadaptive_get_course_item_id_for_grade_id
   - local_uniadaptive_get_course_modules
   - local_uniadaptive_get_coursegrades
   - local_uniadaptive_get_id_grade
   - local_uniadaptive_get_modules_list_by_sections_course
   - local_uniadaptive_set_modules_list_by_sections
+  - local_uniadaptive_update_course_badges_criteria
 
 ## License
 

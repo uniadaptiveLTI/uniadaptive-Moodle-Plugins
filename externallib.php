@@ -83,6 +83,87 @@ class local_uniadaptive_external extends external_api {
         );
     }
 
+    //UPDATE BADGES
+    public static function update_course_badges_criteria_parameters() {
+        return new external_function_parameters(
+            array(
+                'badgeid' => new external_value(PARAM_INT, 'Badge ID', VALUE_REQUIRED),
+                'newcriterias' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'criteriatype' => new external_value(PARAM_INT, 'Criteria Type', VALUE_REQUIRED),
+                            'method' => new external_value(PARAM_INT, 'Method', VALUE_REQUIRED),
+                            'descriptionformat' => new external_value(PARAM_INT, 'Description Format', VALUE_REQUIRED),
+                            'params' => new external_multiple_structure(
+                                new external_single_structure(
+                                    array(
+                                        'name' => new external_value(PARAM_TEXT, 'Name', VALUE_REQUIRED),
+                                        'value' => new external_value(PARAM_TEXT, 'Value', VALUE_REQUIRED),
+                                    )
+                                ), 
+                                'Params', 
+                                VALUE_REQUIRED
+                            ),
+                        )
+                    ), 
+                    'Criterias', 
+                    VALUE_REQUIRED
+                ),
+            )
+        );
+    }
+    
+    public static function update_course_badges_criteria($badgeid, $newcriterias) {
+        global $DB;
+    
+        // Comprobe if the badge exist
+        $badge = $DB->get_record('badge', array('id' => $badgeid));
+        if (!$badge) {
+            throw new moodle_exception('Badge not found');
+        }
+    
+        // Get all existing criteria for the badge
+        $existing_criteria = $DB->get_records('badge_criteria', array('badgeid' => $badge->id));
+    
+        foreach ($existing_criteria as $criterion) {
+            // Delete all existing criteria parameters for the criterion
+            $DB->delete_records('badge_criteria_param', array('critid' => $criterion->id));
+            
+            // Delete the criterion
+            $DB->delete_records('badge_criteria', array('id' => $criterion->id));
+        }
+    
+        foreach ($newcriterias as $newcriteria) {
+            // Create a new criterion
+            $criterion = new stdClass();
+            $criterion->badgeid = $badge->id;
+            $criterion->criteriatype = $newcriteria['criteriatype'];
+            $criterion->method = $newcriteria['method'];
+            $criterion->descriptionformat = $newcriteria['descriptionformat'];
+            $criteriaid = $DB->insert_record('badge_criteria', $criterion);
+    
+            // Update criteria parameters
+            foreach ($newcriteria['params'] as $param) {
+                // Create a new parameter record
+                $paramrecord = new stdClass();
+                $paramrecord->critid = $criteriaid;
+                $paramrecord->name = $param['name'];
+                $paramrecord->value = $param['value'];
+                $DB->insert_record('badge_criteria_param', $paramrecord);
+            }
+        }
+    
+        return array('result' => true);
+    }
+    
+    public static function update_course_badges_criteria_returns() {
+        return new external_single_structure(
+            array(
+                'result' => new external_value(PARAM_BOOL, 'Result')
+            )
+        );
+    }
+
     //GRADES
     public static function get_coursegrades_parameters() {
         return new external_function_parameters(
@@ -180,7 +261,7 @@ class local_uniadaptive_external extends external_api {
         return $grade_item->id;
     }
     //ID GRADE COURSE
-    public static function get_course_grade_parameters() {
+    public static function get_course_grade_with_califications_parameters() {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID')
@@ -188,21 +269,21 @@ class local_uniadaptive_external extends external_api {
         );
     }
     
-    public static function get_course_grade($courseid) {
+    public static function get_course_grade_with_califications($courseid) {
         global $DB;
     
-        // Check if the user has the required capability
+        // Check if the user with the required capability
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('moodle/course:view', $context);
     
-        // Call the getCourseGrade function
-        $grade_id = self::getCourseGrade($courseid);
+        // Call the getCourseGradeWithCalifications function
+        $grade_id = self::getCourseGradeWithCalifications($courseid);
     
         return array('grade_id' => $grade_id);
     }
     
-    public static function get_course_grade_returns() {
+    public static function get_course_grade_with_califications_returns() {
         return new external_single_structure(
             array(
                 'grade_id' => new external_value(PARAM_INT, 'Grade item ID', VALUE_OPTIONAL)
@@ -210,7 +291,7 @@ class local_uniadaptive_external extends external_api {
         );
     }
     
-    private static function getCourseGrade($courseid) {
+    private static function getCourseGradeWithCalifications($courseid) {
         global $DB;
     
         $grade_item = $DB->get_record('grade_items', array(
@@ -435,6 +516,49 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
+    //ITEM FOR GRADE ID
+    public static function get_course_item_id_for_grade_id_parameters() {
+        return new external_function_parameters(
+            array(
+                'gradeid' => new external_value(PARAM_INT, 'Grade item ID')
+            )
+        );
+    }
+
+    public static function get_course_item_id_for_grade_id($gradeid) {
+        global $DB;
     
+        // Check if the user with the required capability
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/course:view', $context);
+    
+        // Get the grade item record
+        $grade_item = $DB->get_record('grade_items', array(
+            'id' => $gradeid
+        ));
+
+        // Get the module record for the course module
+        $module = $DB->get_record('modules', array(
+            'name' => $grade_item->itemmodule
+        ));
+    
+        // Get the course module record for the grade item
+        $course_module = $DB->get_record('course_modules', array(
+            'instance' => $grade_item->iteminstance,
+            'module' => $module->id
+        ));
+    
+        return array('itemid' => $course_module->id);
+    }
+
+    public static function get_course_item_id_for_grade_id_returns() {
+        return new external_single_structure(
+            array(
+                'itemid' => new external_value(PARAM_INT, 'Course module ID', VALUE_OPTIONAL)
+            )
+        );
+    }
+
     
 }
