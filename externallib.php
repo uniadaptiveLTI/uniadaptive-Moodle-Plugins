@@ -9,7 +9,7 @@ class local_uniadaptive_external extends external_api {
     public static function get_course_badges_parameters() {
         return new external_function_parameters(
             array(
-                'courseid' => new external_value(PARAM_INT, 'Course ID')
+                'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED)
             )
         );
     }
@@ -46,7 +46,7 @@ class local_uniadaptive_external extends external_api {
             $result[] = array(
                 'id' => $badge->id,
                 'name' => $badge->name,
-                'conditions' => $badgecriteria,
+                'params' => $badgecriteria,
             );
         }
 
@@ -59,7 +59,7 @@ class local_uniadaptive_external extends external_api {
                 array(
                     'id' => new external_value(PARAM_INT, 'Badge ID'),
                     'name' => new external_value(PARAM_TEXT, 'Badge name'),
-                    'conditions' => new external_multiple_structure(
+                    'params' => new external_multiple_structure(
                         new external_single_structure(
                             array(
                                 'id' => new external_value(PARAM_INT, 'Criterion ID'),
@@ -82,87 +82,7 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
-    //UPDATE BADGES
-    public static function update_course_badges_criteria_parameters() {
-        return new external_function_parameters(
-            array(
-                'badgeid' => new external_value(PARAM_INT, 'Badge ID', VALUE_REQUIRED),
-                'newcriterias' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'criteriatype' => new external_value(PARAM_INT, 'Criteria Type', VALUE_REQUIRED),
-                            'method' => new external_value(PARAM_INT, 'Method', VALUE_REQUIRED),
-                            'descriptionformat' => new external_value(PARAM_INT, 'Description Format', VALUE_REQUIRED),
-                            'params' => new external_multiple_structure(
-                                new external_single_structure(
-                                    array(
-                                        'name' => new external_value(PARAM_TEXT, 'Name', VALUE_REQUIRED),
-                                        'value' => new external_value(PARAM_TEXT, 'Value', VALUE_REQUIRED),
-                                    )
-                                ), 
-                                'Params', 
-                                VALUE_REQUIRED
-                            ),
-                        )
-                    ), 
-                    'Criterias', 
-                    VALUE_REQUIRED
-                ),
-            )
-        );
-    }
     
-    public static function update_course_badges_criteria($badgeid, $newcriterias) {
-        global $DB;
-    
-        // Comprobe if the badge exist
-        $badge = $DB->get_record('badge', array('id' => $badgeid));
-        if (!$badge) {
-            throw new moodle_exception('Badge not found');
-        }
-    
-        // Get all existing criteria for the badge
-        $existing_criteria = $DB->get_records('badge_criteria', array('badgeid' => $badge->id));
-    
-        foreach ($existing_criteria as $criterion) {
-            // Delete all existing criteria parameters for the criterion
-            $DB->delete_records('badge_criteria_param', array('critid' => $criterion->id));
-            
-            // Delete the criterion
-            $DB->delete_records('badge_criteria', array('id' => $criterion->id));
-        }
-    
-        foreach ($newcriterias as $newcriteria) {
-            // Create a new criterion
-            $criterion = new stdClass();
-            $criterion->badgeid = $badge->id;
-            $criterion->criteriatype = $newcriteria['criteriatype'];
-            $criterion->method = $newcriteria['method'];
-            $criterion->descriptionformat = $newcriteria['descriptionformat'];
-            $criteriaid = $DB->insert_record('badge_criteria', $criterion);
-    
-            // Update criteria parameters
-            foreach ($newcriteria['params'] as $param) {
-                // Create a new parameter record
-                $paramrecord = new stdClass();
-                $paramrecord->critid = $criteriaid;
-                $paramrecord->name = $param['name'];
-                $paramrecord->value = $param['value'];
-                $DB->insert_record('badge_criteria_param', $paramrecord);
-            }
-        }
-    
-        return array('result' => true);
-    }
-    
-    public static function update_course_badges_criteria_returns() {
-        return new external_single_structure(
-            array(
-                'result' => new external_value(PARAM_BOOL, 'Result')
-            )
-        );
-    }
 
     //GRADES
     public static function get_coursegrades_parameters() {
@@ -197,7 +117,7 @@ class local_uniadaptive_external extends external_api {
         );
     }
 
-    // Devuelve un array con los nombres de todos los módulos del curso que tienen calificaciones 
+    // Returns an array with the names of all modules in the course that have grades.
     private static function getCoursegrades($course_id) {
         global $DB;
 
@@ -305,96 +225,6 @@ class local_uniadaptive_external extends external_api {
             return null;
         }
     }
-    
-
-    //EXPORT MODULES
-    public static function set_modules_list_by_sections_parameters() {
-        return new external_function_parameters(
-            array(
-                'sections' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'id' => new external_value(PARAM_INT, 'Section ID'),
-                            'sequence' => new external_multiple_structure(
-                                new external_value(PARAM_INT, 'Module ID')
-                            )
-                        )
-                    )
-                ),
-                'modules' => new external_multiple_structure(
-                    new external_single_structure(
-                        array(
-                            'id' => new external_value(PARAM_INT, 'Module ID'),
-                            'section' => new external_value(PARAM_INT, 'Section ID'),
-                            'indent' => new external_value(PARAM_INT, 'Indentation level'),
-                            'c' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
-                            'lmsVisibility' => new external_value(PARAM_BOOL, 'Visibility'),
-                            'order' => new external_value(PARAM_INT, 'Order', VALUE_OPTIONAL),
-                            'children' => new external_multiple_structure(
-                                new external_value(PARAM_INT, 'Child ID'), '', VALUE_OPTIONAL
-                            )
-                        )
-                    )
-                )
-            )
-        );
-    }
-
-    public static function set_modules_list_by_sections($sections, $modules) {
-        global $DB;
-
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        require_capability('moodle/course:update', $context);
-
-        // Call the setModulesListBySections function
-        $result = self::setModulesListBySections($sections, $modules);
-
-        return array('result' => $result);
-    }
-
-    public static function set_modules_list_by_sections_returns() {
-        return new external_single_structure(
-            array(
-                'result' => new external_value(PARAM_BOOL, 'Result')
-            )
-        );
-    }
-
-    private static function setModulesListBySections($sections, $modules) {
-        global $DB;
-
-        try {
-            $transaction = $DB->start_delegated_transaction();
-
-            foreach ($sections as $section) {
-                $DB->set_field('course_sections', 'sequence', implode(',', $section['sequence']), array('id' => $section['id']));
-            }
-            foreach ($modules as $module) {
-                $conditions = null;
-                if (isset($module['c'])) {
-                    $conditions = $module['c'];
-                }
-                $DB->update_record('course_modules', (object)array(
-                    'id' => $module['id'],
-                    'section' => $module['section'],
-                    'indent' => $module['indent'],
-                    'availability' => $conditions,
-                    'visible' => $module['lmsVisibility']
-                ));
-            }
-
-            $transaction->allow_commit();
-            purge_all_caches();
-            return true;
-        } catch (\Exception $e) {
-            // Ocurrió un error, los cambios serán revertidos automáticamente
-            error_log($e);
-            return false;
-        }
-    }
-
     //GET MODULES
     public static function get_course_modules_parameters() {
         return new external_function_parameters(
@@ -559,6 +389,246 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
+    //GET ROLES
+    public static function get_assignable_roles_parameters() {
+        return new external_function_parameters(
+            array(
+                'contextid' => new external_value(PARAM_INT, 'Context ID')
+            )
+        );
+    }
+    
+    public static function get_assignable_roles() {
+        global $DB;
+        // Get all roles
+        $roles = $DB->get_records('role');
+        $result = array();
+        foreach ($roles as $role) {
+            // Get the capabilities of the role in the system context
+            $context = context_system::instance();
+            $capabilities = role_context_capabilities($role->id, $context);
+    
+            // Check if the role has the 'moodle/badges:awardbadge' capability
+            if (isset($capabilities['moodle/badges:awardbadge']) && $capabilities['moodle/badges:awardbadge']) {
+                $result[] = array(
+                    'id' => $role->id,
+                    'name' => role_get_name($role, $context),
+                );
+            }
+        }
+    
+        return $result;
+    }
+    
+    
+    public static function get_assignable_roles_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'Role ID'),
+                    'name' => new external_value(PARAM_TEXT, 'Role name'),
+                )
+            )
+        );
+    }
 
+    //COMPETENCIES
+    public static function get_course_competencies_parameters() {
+        return new external_function_parameters(
+            array(
+                'idnumber' => new external_value(PARAM_TEXT, 'Course ID number')
+            )
+        );
+    }
+    
+    public static function get_course_competencies($idnumber) {
+        global $DB;
+    
+        // Get the competencies for the course
+        $competencies = $DB->get_records('competency', array('idnumber' => $idnumber), '', 'id, shortname');
+        $result = array();
+        foreach ($competencies as $competency) {
+            $result[] = array(
+                'id' => $competency->id,
+                'name' => $competency->shortname,
+            );
+        }
+    
+        return $result;
+    }
+    
+    public static function get_course_competencies_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'Competency ID'),
+                    'name' => new external_value(PARAM_TEXT, 'Competency name'),
+                )
+            )
+        );
+    }
+   
+    public static function update_course_parameters() {   
+        return new external_function_parameters(
+            array(
+                'data' => new external_single_structure(
+                    array(
+                        'sections' => new external_multiple_structure(
+                            new external_single_structure(
+                                array(
+                                    'id' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
+                                    'sequence' => new external_multiple_structure(
+                                        new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED)
+                                    )
+                                )
+                            ),
+                            VALUE_OPTIONAL
+                        ),
+                        'modules' => new external_multiple_structure(
+                            new external_single_structure(
+                                array(
+                                    'id' => new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED),
+                                    'section' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
+                                    'indent' => new external_value(PARAM_INT, 'Indentation level', VALUE_REQUIRED),
+                                    'c' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
+                                    'lmsVisibility' => new external_value(PARAM_BOOL, 'Visibility', VALUE_REQUIRED),
+                                    'order' => new external_value(PARAM_INT, 'Order', VALUE_OPTIONAL)
+                                )
+                            ),
+                            VALUE_OPTIONAL
+                        ),
+                        'badges' => new external_multiple_structure(
+                            new external_single_structure(
+                                array(
+                                    'id' => new external_value(PARAM_INT, 'Badge ID', VALUE_OPTIONAL),
+                                    'conditions' => new external_multiple_structure(
+                                        new external_single_structure(
+                                            array(
+                                                'criteriatype' => new external_value(PARAM_INT, 'Criteria Type', VALUE_OPTIONAL),
+                                                'method' => new external_value(PARAM_INT, 'Method', VALUE_OPTIONAL),
+                                                'descriptionformat' => new external_value(PARAM_INT, 'Description Format', VALUE_OPTIONAL),
+                                                'description' => new external_value(PARAM_TEXT, 'Description', VALUE_OPTIONAL),
+                                                'params' => new external_multiple_structure( 
+                                                    new external_single_structure(
+                                                        array(
+                                                            'name' => new external_value(PARAM_TEXT, 'Name', VALUE_OPTIONAL),
+                                                            'value' => new external_value(PARAM_TEXT, 'Value', VALUE_OPTIONAL),
+                                                        )
+                                                    ), 
+                                                    'Params', 
+                                                    VALUE_OPTIONAL
+                                                ),
+                                            ), 
+                                            
+                                        ),
+                                        'Conditions', 
+                                        VALUE_OPTIONAL
+                                    ),
+                                ),
+                            ),
+                            'Badges',
+                            VALUE_OPTIONAL
+                        )                
+                    )
+                )
+            )
+        );
+    }
+    
+    
+    
+    public static function update_course($data) {
+        global $DB;
+        //Check if the user has the required capability
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/course:update', $context);
+        try {
+            $transaction = $DB->start_delegated_transaction();
+            // Update modules and sections
+            foreach ($data->sections as $section) {
+                $DB->set_field('course_sections', 'sequence', implode(',', $section['sequence']), array('id' => $section['id']));
+            }
+            foreach ($data->modules as $module) {
+                $conditions = null;
+                if (isset($module['c'])) {
+                    $conditions = $module['c'];
+                }
+                $DB->update_record('course_modules', (object)array(
+                    'id' => $module['id'],
+                    'section' => $module['section'],
+                    'indent' => $module['indent'],
+                    'availability' => $conditions,
+                    'visible' => $module['lmsVisibility']
+                ));
+            }
+            // Update badges
+            if ($data->badges !== null && is_array($data->badges) && count($data->badges) > 0) {
+                foreach ($data->badges as $badgeData) {
+                    if (!isset($badgeData['id']) || !isset($badgeData['conditions'])) {
+                        // throw new moodle_exception('Invalid badge data');
+                        return array('status' => false, 'error' => 'INVALID_BADGE_DATA');
+                    }
+                    $id = $badgeData['id'];
+                    $newcriterias = $badgeData['conditions'];
+                    if (!is_array($newcriterias)) {
+                        // throw new moodle_exception('Invalid conditions data');
+                        return array('status' => false, 'error' => 'INVALID_CONDITIONS_DATA');
+                    }
+                    $badge = $DB->get_record('badge', array('id' => $id));
+                    if (!$badge) {
+                        // throw new moodle_exception('Badge not found');
+                        return array('status' => false, 'error' => 'BADGE_NOT_FOUND');
+                    }
+                    // Delete existing criteria
+                    $existing_criteria = $DB->get_records('badge_criteria', array('badgeid' => $badge->id));
+                    foreach ($existing_criteria as $criterion) {
+                        $DB->delete_records('badge_criteria_param', array('critid' => $criterion->id));
+                        $DB->delete_records('badge_criteria', array('id' => $criterion->id));
+                    }
+                    // Insert new criteria
+                    if(count($newcriterias) > 1){
+                        foreach ($newcriterias as $newcriteria) {
+                            $criterion = new stdClass();
+                            $criterion->badgeid = $badge->id;
+                            $criterion->criteriatype = $newcriteria['criteriatype'];
+                            $criterion->method = $newcriteria['method'];
+                            $criterion->descriptionformat = $newcriteria['descriptionformat'];
+                            $criterion->description = $newcriteria['description'];
+                            $criteriaid = $DB->insert_record('badge_criteria', $criterion);
+                            if (!empty($newcriteria['params'])) {
+                                foreach ($newcriteria['params'] as $param) {
+                                    $paramrecord = new stdClass();
+                                    $paramrecord->critid = $criteriaid;
+                                    $paramrecord->name = $param['name'];
+                                    $paramrecord->value = $param['value'];
+                                    $id = $DB->insert_record('badge_criteria_param', $paramrecord);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Commit transaction
+            $transaction->allow_commit();
+            purge_all_caches();
+            return array('status' => true, 'error' => '');
+        } catch (\Exception $e) {
+            // An error occurred, the changes will be reverted automatically.
+            error_log('Fallo');
+            error_log($e);
+            return array('status' => false, 'error' => 'ERROR_OCURRED');
+        }
+    }
+
+    public static function update_course_returns() {
+        return new external_single_structure(
+            array(
+                'status' => new external_value(PARAM_BOOL, 'Status'),
+                'error' => new external_value(PARAM_TEXT, 'Error message')
+            )
+        );
+    }
+    
     
 }
