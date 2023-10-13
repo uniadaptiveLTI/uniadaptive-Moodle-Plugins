@@ -11,6 +11,13 @@ $functions = array(
         'ajax'        => true,
         'loginrequired' => true,
     ),
+    'local_uniadaptive_update_course_badges_criteria' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'update_course_badges_criteria',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'Set the modules list by sections.',
+        'type'        => 'write',
+    ),
     'local_uniadaptive_get_coursegrades' => array(
         'classname'   => 'local_uniadaptive_external',
         'methodname'  => 'get_coursegrades',
@@ -37,6 +44,13 @@ $functions = array(
         'type'        => 'read',
         'ajax'        => true,
         'loginrequired' => true,
+    ),
+    'local_uniadaptive_set_modules_list_by_sections' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'set_modules_list_by_sections',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'Set the modules list by sections.',
+        'type'        => 'write',
     ),
     'local_uniadaptive_get_course_modules' => array(
         'classname'   => 'local_uniadaptive_external',
@@ -90,11 +104,29 @@ $functions = array(
         'description' => 'Set the modules list by sections.',
         'type'        => 'write',
     ),
+    'local_uniadaptive_get_module_data' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'get_module_data',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'Get the module data califications.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
+    ),
+    'local_uniadaptive_get_course_grade_id' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'get_course_grade_id',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'Get the course id grade.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
+    )
 );
 
 $services = array(
     'UniAdaptive' => array(
-        'functions' => array('local_uniadaptive_get_course_badges','local_uniadaptive_get_coursegrades','local_uniadaptive_get_id_grade','local_uniadaptive_get_course_grade','local_uniadaptive_get_course_modules','local_uniadaptive_get_modules_list_by_sections_course,local_uniadaptive_get_course_item_id_for_grade_id','local_uniadaptive_get_assignable_roles','local_uniadaptive_get_course_competencies','local_uniadaptive_update_course'),
+        'functions' => array('local_uniadaptive_get_course_badges','local_uniadaptive_update_course_badges_criteria','local_uniadaptive_get_coursegrades','local_uniadaptive_get_id_grade','local_uniadaptive_get_course_grade','local_uniadaptive_set_modules_list_by_sections','local_uniadaptive_get_course_modules','local_uniadaptive_get_modules_list_by_sections_course,local_uniadaptive_get_course_item_id_for_grade_id','local_uniadaptive_get_assignable_roles','local_uniadaptive_get_course_competencies','local_uniadaptive_update_course','local_uniadaptive_get_module_data', 'local_uniadaptive_get_course_grade_id'),
         'restrictedusers' => 0,
         'enabled' => 1,
     ),

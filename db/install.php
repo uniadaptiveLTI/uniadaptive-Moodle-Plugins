@@ -49,9 +49,13 @@ function xmldb_local_uniadaptive_install() {
         'local_uniadaptive_get_coursegrades',
         'local_uniadaptive_get_id_grade',
         'local_uniadaptive_get_modules_list_by_sections_course',
+        'local_uniadaptive_set_modules_list_by_sections',
+        'local_uniadaptive_update_course_badges_criteria',
         'local_uniadaptive_get_assignable_roles',
         'local_uniadaptive_get_course_competencies',
         'local_uniadaptive_update_course',
+        'local_uniadaptive_get_module_data',
+        'local_uniadaptive_get_course_grade_id'
         // Add any other function names here.
     );
 
