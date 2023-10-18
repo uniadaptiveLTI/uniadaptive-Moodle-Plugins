@@ -545,20 +545,29 @@ class local_uniadaptive_external extends external_api {
 
     public static function get_modules_list_by_sections_course($courseid) {
         global $DB;
-
+    
         // Check if the user has the required capability
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('moodle/course:view', $context);
-
+    
         $sections = $DB->get_records('course_sections', array('course' => $courseid), '', 'id, sequence');
         foreach ($sections as $section) {
             $array = explode(",", $section->sequence);
+            error_log(json_encode($array));
             $section->sequence = array_map('intval', $array);
+            foreach ($section->sequence as $key =>$sequence) {
+                if($sequence == 0){
+                    // array_push($sections, $sequence);
+                    unset($section->sequence[$key]);
+                }
+            }
         }
-
+    
         return array('sections' => array_values($sections));
     }
+    
+    
 
     public static function get_modules_list_by_sections_course_returns() {
         return new external_single_structure(
@@ -568,7 +577,7 @@ class local_uniadaptive_external extends external_api {
                         array(
                             'id' => new external_value(PARAM_INT, 'Section ID'),
                             'sequence' => new external_multiple_structure(
-                                new external_value(PARAM_INT, 'Module ID')
+                                new external_value(PARAM_RAW, 'Module ID', VALUE_OPTIONAL)
                             )
                         )
                     )
@@ -714,12 +723,15 @@ class local_uniadaptive_external extends external_api {
                         'sections' => new external_multiple_structure(
                             new external_single_structure(
                                 array(
-                                    'id' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
+                                    'id' => new external_value(PARAM_INT, 'Section ID', VALUE_OPTIONAL),
                                     'sequence' => new external_multiple_structure(
-                                        new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED)
+                                        new external_value(PARAM_RAW, 'Module ID sequence', VALUE_OPTIONAL),
+                                         'sequence',
+                                          VALUE_OPTIONAL
                                     )
                                 )
                             ),
+                            "sections",
                             VALUE_OPTIONAL
                         ),
                         'modules' => new external_multiple_structure(
@@ -728,7 +740,22 @@ class local_uniadaptive_external extends external_api {
                                     'id' => new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED),
                                     'section' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
                                     'indent' => new external_value(PARAM_INT, 'Indentation level', VALUE_REQUIRED),
-                                    'g' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
+                                    // 'g' => new external_multiple_structure(
+                                    //     new external_single_structure(
+                                    //         array(
+                                    //             'attempts' => new external_value(PARAM_INT, 'Allowed attempts', VALUE_REQUIRED),
+                                    //             'completion' => new external_value(PARAM_INT, 'Completion tracking', VALUE_REQUIRED),
+                                    //             'completiongradeitemnumber' => new external_value(PARAM_BOOL, 'Calification required', VALUE_REQUIRED),
+                                    //             'completionview' => new external_value(PARAM_BOOL, 'View required', VALUE_REQUIRED),
+                                    //             'grademethod' => new external_value(PARAM_INT, 'Calification method', VALUE_REQUIRED),
+                                    //             'gradepass' => new external_value(PARAM_INT, 'Calification for aproving', VALUE_REQUIRED),
+                                    //             'completionexpected' => new external_value(PARAM_INT, 'Finish in', VALUE_REQUIRED),
+                                    //             'requiredType' => new external_value(PARAM_INT, 'Passing grade and all available attempts completed', VALUE_REQUIRED),
+                                    //         )
+                                    //     ),
+                                    //     "Calification conditions",
+                                    //     VALUE_OPTIONAL
+                                    // ),
                                     'c' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
                                     'lmsVisibility' => new external_value(PARAM_BOOL, 'Visibility', VALUE_REQUIRED),
                                     'order' => new external_value(PARAM_INT, 'Order', VALUE_OPTIONAL)
@@ -779,11 +806,12 @@ class local_uniadaptive_external extends external_api {
     
     public static function update_course($data) {
         global $DB;
-        error_log("update course");
+        error_log('ENTRO');
         $sections = $data['sections'];
         $modules = $data['modules'];
         $badges = $data['badges'];
-
+        // error_log(json_encode($modules));
+        // return array('status' => false, 'error' => 'TEST_FUNCTION');
         //Check if the user has the required capability
         $context = context_system::instance();
         self::validate_context($context);
@@ -793,9 +821,27 @@ class local_uniadaptive_external extends external_api {
             // Update modules and sections
             if($sections !== null && is_array($sections) && count($sections) > 0){
                 foreach ($sections as $section) {
-                    error_log("ENTRO SECCIONES");
-                    $DB->set_field('course_sections', 'sequence', implode(',', $section['sequence']), array('id' => $section['id']));
+                    if(isset($section['sequence'])){
+                        error_log('ID: '.$section['id']);
+                        error_log('Contar: '.json_encode(count( $section['sequence'])));
+                        error_log('Primer numero'.$section['sequence'][0] );
+                        if(count( $section['sequence']) > 1){
+                            $sequence = implode(',', $section['sequence']);
+                            error_log('Secuentcia larga: '.json_encode($sequence));
+                        }else{
+                            
+                            $sequence =  $section['sequence'][0];
+                            error_log('Secuentcia corta: '.json_encode($sequence));
+                        }
+                        
+                        $DB->set_field('course_sections', 'sequence', $sequence , array('id' => $section['id']));
+                    }else{
+                        $DB->set_field('course_sections', 'sequence', '' , array('id' => $section['id']));
+                    }
+                    
                 }
+                
+                
             }
 
             if($modules !== null && is_array($modules) && count($modules) > 0){
@@ -903,6 +949,7 @@ class local_uniadaptive_external extends external_api {
     
         // Get the data from mdl_grade_items
         $grade_item = $DB->get_record('grade_items', array('iteminstance' => $module_instance_id, 'itemmodule' => $itemmodule), 'gradepass');
+        $module_data = '';
         
         // Depending on the type of module, get the corresponding data
         switch ($itemmodule) {
@@ -912,18 +959,68 @@ class local_uniadaptive_external extends external_api {
                 break;
             // Add here more cases for other module types
             default:
-                throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
+                return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data'=> []);
+                break;
+                // throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
+                
         }
-    
-        // Combines all data into a single array
-        $result = array_merge((array)$course_module, (array)$grade_item, (array)$module_data);
+
+        if ($module_data != '') {
+            $hasTimeLimit = false;
+            if($course_module->completionexpected != 0){
+                $hasTimeLimit = true;
+            }
+            $requiredType = 0;
+            if($module_data->completionpass)
+            $requiredType++;
+            if($module_data->completionattemptsexhausted)
+            $requiredType++;
+
+            $timeLimit = '';
+            if($hasTimeLimit && $course_module->completionexpected > 0){
+                $timeLimit = date('Y-m-d\TH:i', $course_module->completionexpected);
+            }
+            
+            $result = array(
+                'attemptsAllowed' => $module_data->attempts,
+                'completionTracking' => $course_module->completion,
+                'hasTimeLimit' => $hasTimeLimit,
+                'hasToBeQualified' => $course_module->completiongradeitemnumber,
+                'hasToBeSeen' => $course_module->completionview,
+                'qualificationMethod' => $module_data->grademethod,
+                'qualificationToPass' => $grade_item->gradepass,
+                'timeLimit' => $timeLimit,
+                'requiredType' => $requiredType
+            );
+        }
         error_log(json_encode($result));
-        return json_encode($result);
+        return array('status' => true, 'error' => '', 'data'=> $result);
     }
 
     public static function get_module_data_returns() {
-        return new external_value(PARAM_RAW, 'Raw JSON string');
+        return new external_single_structure(
+            array(
+                'status' => new external_value(PARAM_BOOL, 'Status'),
+                'error' => new external_value(PARAM_TEXT, 'Error message'),
+                'data' => new external_single_structure(
+                    array(
+                        'attemptsAllowed' => new external_value(PARAM_INT, 'attemptsAllowed', VALUE_OPTIONAL),
+                        'completionTracking' => new external_value(PARAM_INT, 'completionTracking', VALUE_OPTIONAL),
+                        'hasTimeLimit' => new external_value(PARAM_BOOL, 'hasTimeLimit', VALUE_OPTIONAL),
+                        'hasToBeQualified' => new external_value(PARAM_BOOL, 'hasToBeQualified', VALUE_OPTIONAL),
+                        'hasToBeSeen' => new external_value(PARAM_BOOL, 'hasToBeSeen', VALUE_OPTIONAL),
+                        'qualificationMethod' => new external_value(PARAM_INT, 'qualificationMethod', VALUE_OPTIONAL),
+                        'qualificationToPass' => new external_value(PARAM_FLOAT, 'qualificationToPass', VALUE_OPTIONAL),
+                        'timeLimit' => new external_value(PARAM_TEXT, 'timeLimit', VALUE_OPTIONAL),
+                        'requiredType' => new external_value(PARAM_INT, 'requiredType', VALUE_OPTIONAL)
+                    ), 
+                    'data modules', 
+                    VALUE_OPTIONAL
+                )
+            )
+        );
     }
+    
     
     
 }
