@@ -683,6 +683,8 @@ class local_uniadaptive_external extends external_api {
         $competencies = $DB->get_records('competency', array('idnumber' => $idnumber), '', 'id, shortname');
         $result = array();
 
+        error_log($idnumber);
+        error_log(json_encode($competencies));
         foreach ($competencies as $competency) {
             $result[] = array(
                 'id' => $competency->id,
@@ -777,7 +779,7 @@ class local_uniadaptive_external extends external_api {
     
     public static function update_course($data) {
         global $DB;
-
+        error_log("update course");
         $sections = $data['sections'];
         $modules = $data['modules'];
         $badges = $data['badges'];
@@ -791,12 +793,14 @@ class local_uniadaptive_external extends external_api {
             // Update modules and sections
             if($sections !== null && is_array($sections) && count($sections) > 0){
                 foreach ($sections as $section) {
+                    error_log("ENTRO SECCIONES");
                     $DB->set_field('course_sections', 'sequence', implode(',', $section['sequence']), array('id' => $section['id']));
                 }
             }
 
             if($modules !== null && is_array($modules) && count($modules) > 0){
                 foreach ($modules as $module) {
+                    error_log("ENTRO MODULES");
                     $conditions = null;
                     if (isset($module['c'])) {
                         $conditions = $module['c'];
@@ -812,14 +816,19 @@ class local_uniadaptive_external extends external_api {
             }
             // Update badges
             if ($badges !== null && is_array($badges) && count($badges) > 0) {
+                error_log("ENTRO BADGES");
                 foreach ($badges as $badgeData) {
                     if (!isset($badgeData['id'])) {
+                        // throw new moodle_exception('Invalid badge data');
+                        error_log("ENTRO 1");
                         return array('status' => false, 'error' => 'INVALID_BADGE_DATA');
                     }
                     $id = $badgeData['id'];
                     $newcriterias = $badgeData['conditions'];
                     $badge = $DB->get_record('badge', array('id' => $id));
                     if (!$badge) {
+                        // throw new moodle_exception('Badge not found');
+                        error_log("ENTRO 3");
                         return array('status' => false, 'error' => 'BADGE_NOT_FOUND');
                     }
                     // Delete existing criteria
@@ -915,4 +924,6 @@ class local_uniadaptive_external extends external_api {
     public static function get_module_data_returns() {
         return new external_value(PARAM_RAW, 'Raw JSON string');
     }
+    
+    
 }
