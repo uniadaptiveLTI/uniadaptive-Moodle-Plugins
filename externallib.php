@@ -13,7 +13,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_course_badges($courseid) {
         global $DB;
 
@@ -52,7 +51,6 @@ class local_uniadaptive_external extends external_api {
 
         return $result;
     }
-
     public static function get_course_badges_returns() {
         return new external_multiple_structure(
             new external_single_structure(
@@ -121,7 +119,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
     public static function update_course_badges_criteria($badges) {
         global $DB;
         if (!is_array($badges)) {
@@ -178,7 +175,6 @@ class local_uniadaptive_external extends external_api {
         }
         return array('result' => true);
     }
-
     public static function update_course_badges_criteria_returns() {
         return new external_single_structure(
             array(
@@ -187,6 +183,14 @@ class local_uniadaptive_external extends external_api {
         );
     }
 
+    //Get course id grade
+    public static function get_course_grade_id_parameters() {
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'Course ID')
+            )
+        );
+    }
     public static function get_course_grade_id($courseid){
         global $DB;
 
@@ -199,23 +203,6 @@ class local_uniadaptive_external extends external_api {
 
         return array('course_grade_id' => $course_grade);
     }
-
-    public static function get_course_grade_id_parameters() {
-        return new external_function_parameters(
-            array(
-                'courseid' => new external_value(PARAM_INT, 'Course ID')
-            )
-        );
-    }
-
-    public static function get_course_grade_id_returns() {
-        return new external_single_structure(
-            array(
-                'course_grade_id' => new external_value(PARAM_INT, 'Course grade ID')
-            )
-        );
-    }
-
     private static function getCourseGradeId($courseid){
         global $DB;
 
@@ -226,6 +213,14 @@ class local_uniadaptive_external extends external_api {
 
         return $grade_item->id;
     }
+    public static function get_course_grade_id_returns() {
+        return new external_single_structure(
+            array(
+                'course_grade_id' => new external_value(PARAM_INT, 'Course grade ID')
+            )
+        );
+    }
+    
     
 
     //GRADES
@@ -236,7 +231,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_coursegrades($course_id) {
         global $DB;
 
@@ -250,7 +244,21 @@ class local_uniadaptive_external extends external_api {
 
         return array('module_grades' => $module_grades);
     }
+    // Returns an array with the names of all modules in the course that have grades.
+    private static function getCoursegrades($course_id) {
+        global $DB;
 
+        $module_grades = $DB->get_records_sql(
+            "SELECT gi.itemname
+                FROM {grade_items} gi
+                JOIN {grade_grades} gg ON gg.itemid = gi.id
+                WHERE gi.courseid = :courseid AND gi.itemtype = 'mod' AND gg.rawgrade IS NOT NULL
+                GROUP BY gi.itemname",
+            array('courseid' => $course_id)
+        );
+
+        return array_keys($module_grades);
+    }
     public static function get_coursegrades_returns() {
         return new external_single_structure(
             array(
@@ -261,21 +269,6 @@ class local_uniadaptive_external extends external_api {
         );
     }
 
-    // Returns an array with the names of all modules in the course that have grades.
-    private static function getCoursegrades($course_id) {
-        global $DB;
-
-        $module_grades = $DB->get_records_sql(
-            "SELECT gi.itemname
-             FROM {grade_items} gi
-             JOIN {grade_grades} gg ON gg.itemid = gi.id
-             WHERE gi.courseid = :courseid AND gi.itemtype = 'mod' AND gg.rawgrade IS NOT NULL
-             GROUP BY gi.itemname",
-            array('courseid' => $course_id)
-        );
-
-        return array_keys($module_grades);
-    }
 
     //ID GRADES
     public static function get_id_grade_parameters() {
@@ -288,7 +281,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_id_grade($courseid, $cmname, $cmmodname, $cminstance) {
         global $DB;
 
@@ -302,7 +294,6 @@ class local_uniadaptive_external extends external_api {
 
         return array('grade_id' => $grade_id);
     }
-
     public static function get_id_grade_returns() {
         return new external_single_structure(
             array(
@@ -310,7 +301,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     private static function getIdGrade($courseid, $cmname, $cmmodname, $cminstance) {
         global $DB;
 
@@ -324,6 +314,7 @@ class local_uniadaptive_external extends external_api {
 
         return $grade_item->id;
     }
+
     //ID GRADE COURSE
     public static function get_course_grade_with_califications_parameters() {
         return new external_function_parameters(
@@ -332,7 +323,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
     public static function get_course_grade_with_califications($courseid) {
         global $DB;
     
@@ -346,7 +336,6 @@ class local_uniadaptive_external extends external_api {
     
         return array('grade_id' => $grade_id);
     }
-    
     public static function get_course_grade_with_califications_returns() {
         return new external_single_structure(
             array(
@@ -354,7 +343,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
     private static function getCourseGradeWithCalifications($courseid) {
         global $DB;
     
@@ -400,7 +388,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function set_modules_list_by_sections($sections, $modules) {
         global $DB;
         // Check if the user has the required capability
@@ -413,7 +400,6 @@ class local_uniadaptive_external extends external_api {
 
         return array('result' => $result);
     }
-
     private static function setModulesListBySections($sections, $modules) {
         global $DB;
 
@@ -446,7 +432,6 @@ class local_uniadaptive_external extends external_api {
             return false;
         }
     }
-
     public static function set_modules_list_by_sections_returns() {
         return new external_single_structure(
             array(
@@ -470,11 +455,10 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
     public static function get_course_modules($courseid, $exclude = array(), $invert = false) {
         global $DB;
-    
         // Check if the user has the required capability
+        error_log('Supporteds: '.json_encode($exclude));
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('moodle/course:view', $context);
@@ -484,7 +468,41 @@ class local_uniadaptive_external extends external_api {
     
         return array('modules' => $modules);
     }
-    
+    private static function getCourseModules($courseid, $exclude, $invert) {
+        global $DB;
+        $modulesList = $DB->get_records('course_modules', array('course' => $courseid, 'deletioninprogress' => !$exclude), '', 'id, module, instance, section');
+        $modules = array();
+        foreach ($modulesList as $cm) {
+            $modname = $DB->get_field('modules', 'name', array('id' => $cm->module));
+            if ($invert) {
+                if (in_array($modname, $exclude)) {
+                    error_log($modname.': '.in_array($modname, $exclude));
+                    $module_data =  $DB->get_record($modname, array('id' => $cm->instance), 'name');
+                    $section = $DB->get_record('course_sections', array('id' => $cm->section), 'section');
+                    array_push($modules, [
+                        'id' => $cm->id,
+                        'modname' => $modname,
+                        'name' => $module_data->name,
+                        'section' => $section->section
+                    ]);
+                }
+            } else {
+                if (!in_array($modname, $exclude)) {
+                    error_log($modname.': '.!in_array($modname, $exclude));
+                    $module_data =  $DB->get_record($modname, array('id' => $cm->instance), 'name');
+                    $section = $DB->get_record('course_sections', array('id' => $cm->section), 'section');
+                    array_push($modules, [
+                        'id' => $cm->id,
+                        'modname' => $modname,
+                        'name' => $module_data->name,
+                        'section' => $section->section
+                    ]);
+                }
+            }
+        }
+        return $modules;
+
+    }
     public static function get_course_modules_returns() {
         return new external_single_structure(
             array(
@@ -502,36 +520,53 @@ class local_uniadaptive_external extends external_api {
         );
     }
     
-    private static function getCourseModules($courseid, $exclude, $invert) {
+
+    //GET MODULES BY TYPE
+    public static function get_course_modules_by_type_parameters(){
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                'type' => new external_value(PARAM_TEXT, 'Type name'),
+                'excludestatusdelete' => new external_value(PARAM_BOOL, 'Exclude the modules that have delete status', VALUE_DEFAULT, false)
+            )
+        );
+    }
+    public static function get_course_modules_by_type($courseid, $type, $exclude){
         global $DB;
-    
-        $modules = array();
-        $modinfo = get_fast_modinfo($courseid);
-        foreach ($modinfo->get_cms() as $cm) {
-            if ($invert) {
-                if (in_array($cm->modname, $exclude)) {
-                    $module = array(
-                        'id' => $cm->id,
-                        'modname' => $cm->modname,
-                        'name' => $cm->name,
-                        'section' => $cm->section
-                    );
-                    array_push($modules, $module);
-                }
-            } else {
-                if (!in_array($cm->modname, $exclude)) {
-                    $module = array(
-                        'id' => $cm->id,
-                        'modname' => $cm->modname,
-                        'name' => $cm->name,
-                        'section' => $cm->section
-                    );
-                    array_push($modules, $module);
-                }
-            }
+        // Check if the user with the required capability
+        error_log($type);
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/course:view', $context);
+        $modules = [];
+        $module_name = $DB->get_record('modules', array('name' => $type), 'id, name');
+        
+        $modules_course = $DB->get_records('course_modules', array('course' => $courseid, 'module' => $module_name->id, 'deletioninprogress' => (int) !$exclude), '', 'id, instance, section');
+        foreach ($modules_course as $module) {
+            $module_item = $DB->get_record($type, array('id' =>  $module->instance, 'course' => $courseid), 'name');
+            $section = $DB->get_record('course_sections', array('id' =>  $module->section), 'section');
+            array_push($modules, [
+                'id' => $module->id,
+                'name' => $module_item->name,
+                'section' => $section->section
+            ]);
         }
-    
-        return $modules;
+        return ['modules' => $modules];
+    }
+    public static function get_course_modules_by_type_returns() {
+        return new external_single_structure(
+            array(
+                'modules' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'id' => new external_value(PARAM_INT, 'Module ID'),
+                            'name' => new external_value(PARAM_TEXT, 'Module name'),
+                            'section' => new external_value(PARAM_INT, 'Section module'),
+                        )
+                    )
+                )
+            )
+        );
     }
     
     //GET MODULES LIST BY SECTIONS COURSE
@@ -542,24 +577,29 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_modules_list_by_sections_course($courseid) {
         global $DB;
-
+    
         // Check if the user has the required capability
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('moodle/course:view', $context);
-
+    
         $sections = $DB->get_records('course_sections', array('course' => $courseid), '', 'id, sequence');
         foreach ($sections as $section) {
             $array = explode(",", $section->sequence);
+            error_log(json_encode($array));
             $section->sequence = array_map('intval', $array);
+            foreach ($section->sequence as $key =>$sequence) {
+                if($sequence == 0){
+                    // array_push($sections, $sequence);
+                    unset($section->sequence[$key]);
+                }
+            }
         }
-
+    
         return array('sections' => array_values($sections));
     }
-
     public static function get_modules_list_by_sections_course_returns() {
         return new external_single_structure(
             array(
@@ -568,7 +608,7 @@ class local_uniadaptive_external extends external_api {
                         array(
                             'id' => new external_value(PARAM_INT, 'Section ID'),
                             'sequence' => new external_multiple_structure(
-                                new external_value(PARAM_INT, 'Module ID')
+                                new external_value(PARAM_RAW, 'Module ID', VALUE_OPTIONAL)
                             )
                         )
                     )
@@ -576,6 +616,7 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
+
     //ITEM FOR GRADE ID
     public static function get_course_item_id_for_grade_id_parameters() {
         return new external_function_parameters(
@@ -584,7 +625,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_course_item_id_for_grade_id($gradeid) {
         global $DB;
     
@@ -615,7 +655,6 @@ class local_uniadaptive_external extends external_api {
             return array('itemid' => $grade_item->courseid, 'itemtype' => $grade_item->itemtype);
         }
     }
-
     public static function get_course_item_id_for_grade_id_returns() {
         return new external_single_structure(
             array(
@@ -624,6 +663,7 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
+
     //GET ROLES
     public static function get_assignable_roles_parameters() {
         return new external_function_parameters(
@@ -632,7 +672,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
     public static function get_assignable_roles() {
         global $DB;
         // Get all roles
@@ -654,8 +693,6 @@ class local_uniadaptive_external extends external_api {
     
         return $result;
     }
-    
-    
     public static function get_assignable_roles_returns() {
         return new external_multiple_structure(
             new external_single_structure(
@@ -676,20 +713,23 @@ class local_uniadaptive_external extends external_api {
         );
     }
     
-    public static function get_course_competencies($idnumber) {
+    public static function get_course_competencies($courseid) {
         global $DB;
-    
         // Get the competencies for the course
-        $competencies = $DB->get_records('competency', array('idnumber' => $idnumber), '', 'id, shortname');
-        $result = array();
+        $course_comps = $DB->get_records('competency_coursecomp', array('courseid' => $courseid), '', 'id, competencyid');
+        $result = [];
 
-        foreach ($competencies as $competency) {
-            $result[] = array(
-                'id' => $competency->id,
-                'name' => $competency->shortname,
-            );
+        foreach ($course_comps as $competency) {
+            $comps_data = $DB->get_records('competency', array('id' => $competency->competencyid),'', 'id, shortname');
+            foreach ($comps_data as $comp_data) {
+                array_push($result,[
+                    'id' => $comp_data->id,
+                    'name' => $comp_data->shortname
+                ]);
+            }
+            
         }
-    
+        error_log('RESULT: '.json_encode($result));
         return $result;
     }
     
@@ -704,6 +744,7 @@ class local_uniadaptive_external extends external_api {
         );
     }
    
+    //UPDATE COURSE
     public static function update_course_parameters() {   
         return new external_function_parameters(
             array(
@@ -712,12 +753,15 @@ class local_uniadaptive_external extends external_api {
                         'sections' => new external_multiple_structure(
                             new external_single_structure(
                                 array(
-                                    'id' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
+                                    'id' => new external_value(PARAM_INT, 'Section ID', VALUE_OPTIONAL),
                                     'sequence' => new external_multiple_structure(
-                                        new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED)
+                                        new external_value(PARAM_RAW, 'Module ID sequence', VALUE_OPTIONAL),
+                                         'sequence',
+                                          VALUE_OPTIONAL
                                     )
                                 )
                             ),
+                            "sections",
                             VALUE_OPTIONAL
                         ),
                         'modules' => new external_multiple_structure(
@@ -726,7 +770,22 @@ class local_uniadaptive_external extends external_api {
                                     'id' => new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED),
                                     'section' => new external_value(PARAM_INT, 'Section ID', VALUE_REQUIRED),
                                     'indent' => new external_value(PARAM_INT, 'Indentation level', VALUE_REQUIRED),
-                                    'g' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
+                                    'g' => new external_single_structure(
+                                        array(
+                                            'hasConditions' => new external_value(PARAM_BOOL, 'Has conditions', VALUE_REQUIRED),
+                                            'hasToBeSeen' => new external_value(PARAM_BOOL, 'Has to be seen', VALUE_REQUIRED),
+                                            'hasToBeQualified' => new external_value(PARAM_BOOL, 'Calification required', VALUE_REQUIRED),
+                                            'data' => new external_single_structure(
+                                                array(
+                                                    'min' => new external_value(PARAM_TEXT, 'Minimal calification', VALUE_REQUIRED),
+                                                    'max' => new external_value(PARAM_TEXT, 'Maximal calification', VALUE_REQUIRED),
+                                                    'hasToSelect' => new external_value(PARAM_BOOL, 'Has to select', VALUE_REQUIRED)
+                                                )
+                                            )
+                                        ),
+                                        'Calification conditions',
+                                        VALUE_OPTIONAL
+                                    ),
                                     'c' => new external_value(PARAM_RAW, 'Availability conditions', VALUE_OPTIONAL),
                                     'lmsVisibility' => new external_value(PARAM_BOOL, 'Visibility', VALUE_REQUIRED),
                                     'order' => new external_value(PARAM_INT, 'Order', VALUE_OPTIONAL)
@@ -757,7 +816,6 @@ class local_uniadaptive_external extends external_api {
                                                     VALUE_OPTIONAL
                                                 ),
                                             ), 
-                                            
                                         ),
                                         'Conditions', 
                                         VALUE_OPTIONAL
@@ -772,16 +830,16 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
-    
-    
     public static function update_course($data) {
-        global $DB;
-
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/gradelib.php');
+        error_log('ENTRO');
+        // return array('status' => false, 'error' => 'TEST');
         $sections = $data['sections'];
         $modules = $data['modules'];
         $badges = $data['badges'];
-
+        // error_log(json_encode($modules));
+        // return array('status' => false, 'error' => 'TEST_FUNCTION');
         //Check if the user has the required capability
         $context = context_system::instance();
         self::validate_context($context);
@@ -791,35 +849,159 @@ class local_uniadaptive_external extends external_api {
             // Update modules and sections
             if($sections !== null && is_array($sections) && count($sections) > 0){
                 foreach ($sections as $section) {
-                    $DB->set_field('course_sections', 'sequence', implode(',', $section['sequence']), array('id' => $section['id']));
+                    if(isset($section['sequence'])){
+                        if(count( $section['sequence']) > 1){
+                            $sequence = implode(',', $section['sequence']);
+                        }else{
+                            
+                            $sequence =  $section['sequence'][0];
+                        }
+                        
+                        $DB->set_field('course_sections', 'sequence', $sequence , array('id' => $section['id']));
+                    }else{
+                        $DB->set_field('course_sections', 'sequence', '' , array('id' => $section['id']));
+                    }
+                    
                 }
+                
+                
             }
 
             if($modules !== null && is_array($modules) && count($modules) > 0){
+                $course_id = $DB->get_record('course_modules', array('id' => $modules[0]['id']), 'course');
+                $grade_items = $DB->get_records('grade_items', array('courseid' => $course_id->course, 'itemtype' => 'mod'));
                 foreach ($modules as $module) {
                     $conditions = null;
                     if (isset($module['c'])) {
                         $conditions = $module['c'];
                     }
-                    $DB->update_record('course_modules', (object)array(
-                        'id' => $module['id'],
-                        'section' => $module['section'],
-                        'indent' => $module['indent'],
-                        'availability' => $conditions,
-                        'visible' => $module['lmsVisibility']
+                    $completion = 0;
+                    if(isset($module['g'])){
+                        $gradepass = (float) $module['g']['data']['min'];
+                        $grademax = (float) $module['g']['data']['max'];
+                        if($module['g']['hasConditions']){
+                            $completion++;
+                            if($module['g']['hasToBeSeen'] || $module['g']['hasToBeQualified'])
+                            $completion++;
+                        }
+                        $course_module = $DB->get_record('course_modules', array('id' => $module['id']), 'course, module, instance');
+                        $module_record = $DB->get_record('modules', array('id' => $course_module->module));
+                        $grade_item = $DB->get_record('grade_items', array('iteminstance' => $course_module->instance, 'itemmodule' => $module_record->name));
+                        if($grade_item){
+                            
+                            switch ($module_record->name) {
+                                case 'quiz':
+                                    $DB->update_record('grade_items', (object)array(
+                                        'id' => $grade_item->id,
+                                        'gradepass' => $gradepass < 1 ? 100: $gradepass,
+                                        'gradetype' => $module['g']['hasConditions'] ? 1 : 3
+                                    ));
+                                    break;
+                                case 'forum':
+                                    $DB->update_record('grade_items', (object)array(
+                                        'id' => $grade_item->id,
+                                        'gradepass' => $gradepass,
+                                        'grademax' => $grademax < 1 ? 100: $grademax,
+                                        'gradetype' => $module['g']['hasConditions'] ? 1 : 3
+                                    ));
+                                    $DB->update_record($module_record->name, (object)array(
+                                        'id' => $course_module->instance,
+                                        'assessed' => $module['g']['hasToBeQualified'] ? 3 : 0
+                                    ));
+
+                                    break;
+                                default:
+                                    $DB->update_record('grade_items', (object)array(
+                                        'id' => $grade_item->id,
+                                        'gradepass' => $gradepass < 1 ? 100: $gradepass,
+                                        'grademax' => $grademax < 1 ? 100: $grademax,
+                                        'gradetype' => $module['g']['hasConditions'] ? 1 : 3
+                                    ));
+                                    break;
+                            }
+                            
+                        }else{
+                            error_log('ENTRO');
+                            $data_item = $DB->get_record($module_record->name, array('id' => $course_module->instance, 'course' => $course_module->course));
+                            $DB->update_record($module_record->name, (object)array(
+                                'id' => $course_module->instance,
+                                'assessed' => $module['g']['hasToBeQualified'] ? 3 : 0
+                            ));
+                            $max_sortorder = 0;
+                            $category_id = null;
+                            foreach ($grade_items as $grade_item) {
+                                if ($grade_item->sortorder > $max_sortorder) {
+                                    $max_sortorder = $grade_item->sortorder;
+                                }
+                                if ($grade_item->categoryid != null){
+                                    $category_id = $grade_item->categoryid;
+                                }
+                                
+                            }
+                            $new_grade_item = new stdClass();
+                                $new_grade_item->courseid = $course_id->course;
+                                $new_grade_item->categoryid = $category_id;
+                                $new_grade_item->itemname = $data_item->name;
+                                $new_grade_item->itemtype = 'mod';
+                                $new_grade_item->itemmodule = $module_record->name;
+                                $new_grade_item->itemnumber = 0;
+                                $new_grade_item->idnumber = '';
+                                $new_grade_item->iteminstance = $course_module->instance;
+                                $new_grade_item->gradetype = $module['g']['hasConditions'] ? 1 : 3;
+                                $new_grade_item->gradepass = $gradepass;
+                                $new_grade_item->grademax = $grademax < 1 ? 100: $grademax;
+                                $new_grade_item->sortorder = $max_sortorder;
+                                $new_grade_item->timecreated = time();
+                                $new_grade_item->timemodified = time();
+                                $new_grade_item->id = $DB->insert_record('grade_items', $new_grade_item);
+                            
+                            
+                        }
+                        
+                        $DB->update_record('course_modules', (object)array(
+                            'id' => $module['id'],
+                            'section' => $module['section'],
+                            'indent' => $module['indent'],
+                            'availability' => $conditions,
+                            'visible' => $module['lmsVisibility'],
+                            'completion' => $completion,
+                            'completionview' => (int) $module['g']['hasToBeSeen'],
+                            'completiongradeitemnumber' => $module['g']['hasToBeQualified'] ? 0 : null
+                        ));
+                    }
+                    
+                }
+                $grade_items = $DB->get_records('grade_items', array('courseid' => $course_id->course, 'itemtype' => 'mod', 'gradetype' => 1));
+
+                $sum_grademax = 0;
+                foreach ($grade_items as $grade_item) {
+                    $sum_grademax += $grade_item->grademax;
+                }
+                $course_grade_item = $DB->get_record('grade_items', array('courseid' => $course_id->course, 'itemtype' => 'course'));
+                $DB->update_record('grade_items', (object)array(
+                    'id' => $course_grade_item->id,
+                    'grademax' => $sum_grademax
+                ));
+                foreach ($grade_items as $grade_item) {
+                    $DB->update_record('grade_items', (object)array(
+                        'id' => $grade_item->id,
+                        'aggregationcoef2' => $grade_item->grademax / $sum_grademax
                     ));
                 }
+
             }
             // Update badges
             if ($badges !== null && is_array($badges) && count($badges) > 0) {
                 foreach ($badges as $badgeData) {
                     if (!isset($badgeData['id'])) {
+                        // throw new moodle_exception('Invalid badge data');
                         return array('status' => false, 'error' => 'INVALID_BADGE_DATA');
                     }
                     $id = $badgeData['id'];
                     $newcriterias = $badgeData['conditions'];
                     $badge = $DB->get_record('badge', array('id' => $id));
                     if (!$badge) {
+                        // throw new moodle_exception('Badge not found');
                         return array('status' => false, 'error' => 'BADGE_NOT_FOUND');
                     }
                     // Delete existing criteria
@@ -862,7 +1044,6 @@ class local_uniadaptive_external extends external_api {
             return array('status' => false, 'error' => 'ERROR_OCURRED');
         }
     }
-
     public static function update_course_returns() {
         return new external_single_structure(
             array(
@@ -873,7 +1054,6 @@ class local_uniadaptive_external extends external_api {
     }
 
     // Get califications
-    
     public static function get_module_data_parameters() {
         return new external_function_parameters(
             array(
@@ -882,37 +1062,177 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     public static function get_module_data($moduleid, $itemmodule) {
         global $DB;
         // error_log($moduleid);
         // Get the data from mdl_course_modules
-        $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, completionexpected, instance');
+        $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
         
         // Get the instance ID of the module
         $module_instance_id = $course_module->instance;
     
         // Get the data from mdl_grade_items
-        $grade_item = $DB->get_record('grade_items', array('iteminstance' => $module_instance_id, 'itemmodule' => $itemmodule), 'gradepass');
-        
+        $grade_item = $DB->get_record('grade_items', array('iteminstance' => $module_instance_id, 'itemmodule' => $itemmodule), 'gradetype, grademax, gradepass, scaleid');
+        $module_data = '';
+        error_log($itemmodule);
         // Depending on the type of module, get the corresponding data
         switch ($itemmodule) {
             case 'quiz':
-                $module_data = $DB->get_record('quiz', array('id' => $module_instance_id), 'completionminattempts, attempts, grademethod, completionpass, completionattemptsexhausted');
-                
+                $module_data = $DB->get_record('quiz', array('id' => $module_instance_id), 'completionpass, completionattemptsexhausted');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => false
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
+                break;
+            case 'assign':
+                $module_data = $DB->get_record('assign', array('id' => $module_instance_id), 'completionsubmit');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => false
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
+                break;
+            case 'forum':
+                $module_data = $DB->get_record('forum', array('id' => $module_instance_id), 'assessed, scale');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => false
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
+                break;
+            case 'workshop':
+                $module_data = $DB->get_record('workshop', array('id' => $module_instance_id), 'strategy');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => false
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
+                break;
+            case 'choice':
+                $module_data = $DB->get_record('choice', array('id' => $module_instance_id), 'completionsubmit');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => (bool) $module_data->completionsubmit
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
+                break;
+            case 'glossary':
+                $module_data = $DB->get_record('glossary', array('id' => $module_instance_id), 'assessed, scale');
+                if ($module_data != '') {
+        
+                    $result = [
+                        'hasConditions' => $course_module->completion > 0 ? true : false,
+                        'hasToBeSeen' => (bool) $course_module->completionview,
+                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
+                        'data' => [
+                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'hasToSelect' => false
+                        ],
+                    ];
+                }
+                // error_log(json_encode($result));
+                return array('status' => true, 'error' => '', 'data'=> $result);
                 break;
             // Add here more cases for other module types
             default:
-                throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
+                $result = [
+                    'hasConditions' => $course_module->completion > 0 ? true : false,
+                    'hasToBeSeen' => (bool) $course_module->completionview,
+                    'hasToBeQualified' => false,
+                    'data' => [
+                        'min' => "0.00000",
+                        'max' => "0.00000",
+                        'hasToSelect' => false
+                    ],
+                ];
+                return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data'=> $result);
+                break;
+                // throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
+                
         }
-    
-        // Combines all data into a single array
-        $result = array_merge((array)$course_module, (array)$grade_item, (array)$module_data);
-        error_log(json_encode($result));
-        return json_encode($result);
-    }
+        
 
-    public static function get_module_data_returns() {
-        return new external_value(PARAM_RAW, 'Raw JSON string');
+        
     }
+    public static function get_module_data_returns() {
+        return new external_single_structure(
+            array(
+                'status' => new external_value(PARAM_BOOL, 'Status'),
+                'error' => new external_value(PARAM_TEXT, 'Error message'),
+                'data' =>
+                    new external_single_structure(
+                        array(
+                            'hasConditions' => new external_value(PARAM_BOOL, 'Competency ID'),
+                            'hasToBeSeen' => new external_value(PARAM_BOOL, 'Competency name'),
+                            'hasToBeQualified' => new external_value(PARAM_BOOL, 'Competency name'),
+                            'data' => 
+                                new external_single_structure(
+                                    array(
+                                        'min' => new external_value(PARAM_RAW, 'Competency ID'),
+                                        'max' => new external_value(PARAM_RAW, 'Competency name'),
+                                        'hasToSelect' => new external_value(PARAM_BOOL, 'Competency name'),
+                                    )
+                                )
+                            
+                        )
+                    )
+                
+            )
+        );
+    }
+    
+    
+    
 }

@@ -46,6 +46,7 @@ function xmldb_local_uniadaptive_install() {
         'local_uniadaptive_get_course_grade_with_califications',
         'local_uniadaptive_get_course_item_id_for_grade_id',
         'local_uniadaptive_get_course_modules',
+        'local_uniadaptive_get_course_modules_by_type',
         'local_uniadaptive_get_coursegrades',
         'local_uniadaptive_get_id_grade',
         'local_uniadaptive_get_modules_list_by_sections_course',

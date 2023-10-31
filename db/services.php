@@ -61,6 +61,15 @@ $functions = array(
         'ajax'        => true,
         'loginrequired' => true,
     ),
+    'local_uniadaptive_get_course_modules_by_type' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'get_course_modules_by_type',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'Get the modules course by type.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
+    ),
     'local_uniadaptive_get_modules_list_by_sections_course' => array(
         'classname'   => 'local_uniadaptive_external',
         'methodname'  => 'get_modules_list_by_sections_course',
@@ -126,7 +135,7 @@ $functions = array(
 
 $services = array(
     'UniAdaptive' => array(
-        'functions' => array('local_uniadaptive_get_course_badges','local_uniadaptive_update_course_badges_criteria','local_uniadaptive_get_coursegrades','local_uniadaptive_get_id_grade','local_uniadaptive_get_course_grade','local_uniadaptive_set_modules_list_by_sections','local_uniadaptive_get_course_modules','local_uniadaptive_get_modules_list_by_sections_course,local_uniadaptive_get_course_item_id_for_grade_id','local_uniadaptive_get_assignable_roles','local_uniadaptive_get_course_competencies','local_uniadaptive_update_course','local_uniadaptive_get_module_data', 'local_uniadaptive_get_course_grade_id'),
+        'functions' => array('local_uniadaptive_get_course_badges','local_uniadaptive_update_course_badges_criteria','local_uniadaptive_get_coursegrades','local_uniadaptive_get_id_grade','local_uniadaptive_get_course_grade','local_uniadaptive_set_modules_list_by_sections','local_uniadaptive_get_course_modules','local_uniadaptive_get_course_modules_by_type','local_uniadaptive_get_modules_list_by_sections_course,local_uniadaptive_get_course_item_id_for_grade_id','local_uniadaptive_get_assignable_roles','local_uniadaptive_get_course_competencies','local_uniadaptive_update_course','local_uniadaptive_get_module_data', 'local_uniadaptive_get_course_grade_id'),
         'restrictedusers' => 0,
         'enabled' => 1,
     ),
