@@ -977,6 +977,7 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_module_data($moduleid, $itemmodule) {
         global $DB;
+        // error_log('ENTRO EN get_module_data');
         // Get the data from mdl_course_modules
         $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
         // Get the instance ID of the module
@@ -987,111 +988,27 @@ class local_uniadaptive_external extends external_api {
         // Depending on the type of module, get the corresponding data
         switch ($itemmodule) {
             case 'quiz':
-                $module_data = $DB->get_record('quiz', array('id' => $module_instance_id), 'completionpass, completionattemptsexhausted');
-                if ($module_data != '') {
-        
-                    $result = [
-                        'hasConditions' => $course_module->completion > 0 ? true : false,
-                        'hasToBeSeen' => (bool) $course_module->completionview,
-                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
-                        'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "10.00000": $grade_item->grademax,
-                            'hasToSelect' => false
-                        ],
-                    ];
-                }
-                // error_log(json_encode($result));
-                return array('status' => true, 'error' => '', 'data'=> $result);
-                break;
             case 'assign':
-                $module_data = $DB->get_record('assign', array('id' => $module_instance_id), 'completionsubmit');
-                if ($module_data != '') {
-        
-                    $result = [
-                        'hasConditions' => $course_module->completion > 0 ? true : false,
-                        'hasToBeSeen' => (bool) $course_module->completionview,
-                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
-                        'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
-                            'hasToSelect' => false
-                        ],
-                    ];
-                }
-                // error_log(json_encode($result));
-                return array('status' => true, 'error' => '', 'data'=> $result);
-                break;
             case 'forum':
-                $module_data = $DB->get_record('forum', array('id' => $module_instance_id), 'assessed, scale');
-                if ($module_data != '') {
-        
-                    $result = [
-                        'hasConditions' => $course_module->completion > 0 ? true : false,
-                        'hasToBeSeen' => (bool) $course_module->completionview,
-                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
-                        'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
-                            'hasToSelect' => false
-                        ],
-                    ];
-                }
-                // error_log(json_encode($result));
-                return array('status' => true, 'error' => '', 'data'=> $result);
-                break;
             case 'workshop':
-                $module_data = $DB->get_record('workshop', array('id' => $module_instance_id), 'strategy');
-                if ($module_data != '') {
-        
-                    $result = [
-                        'hasConditions' => $course_module->completion > 0 ? true : false,
-                        'hasToBeSeen' => (bool) $course_module->completionview,
-                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
-                        'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
-                            'hasToSelect' => false
-                        ],
-                    ];
-                }
-                // error_log(json_encode($result));
-                return array('status' => true, 'error' => '', 'data'=> $result);
-                break;
             case 'choice':
-                $module_data = $DB->get_record('choice', array('id' => $module_instance_id), 'completionsubmit');
-                if ($module_data != '') {
-        
-                    $result = [
-                        'hasConditions' => $course_module->completion > 0 ? true : false,
-                        'hasToBeSeen' => (bool) $course_module->completionview,
-                        'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
-                        'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
-                            'hasToSelect' => (bool) $module_data->completionsubmit
-                        ],
-                    ];
-                }
-                // error_log(json_encode($result));
-                return array('status' => true, 'error' => '', 'data'=> $result);
-                break;
             case 'glossary':
-                $module_data = $DB->get_record('glossary', array('id' => $module_instance_id), 'assessed, scale');
+                // error_log('ENTRO');
+                $module_data = $DB->get_record($itemmodule, array('id' => $module_instance_id));
                 if ($module_data != '') {
-        
                     $result = [
                         'hasConditions' => $course_module->completion > 0 ? true : false,
                         'hasToBeSeen' => (bool) $course_module->completionview,
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? ($itemmodule == 'quiz' ? "10.00000" : "100.00000") : $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
                 }
                 // error_log(json_encode($result));
+                // error_log('SALGO');
                 return array('status' => true, 'error' => '', 'data'=> $result);
                 break;
             // Add here more cases for other module types
