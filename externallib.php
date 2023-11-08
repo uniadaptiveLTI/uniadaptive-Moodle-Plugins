@@ -15,13 +15,8 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_course_badges($courseid) {
         global $DB;
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         // Get the badges for the course
-        $badges = $DB->get_records('badge', array('courseid' => $courseid), '', 'id, name');
+        $badges = $DB->get_records_sql("SELECT id, name FROM {badge} WHERE courseid = :courseid AND status <> :status", ['courseid' => $courseid, 'status' => 1]);
         $result = array();
         foreach ($badges as $badge) {
             // Get the badge criteria
@@ -125,11 +120,6 @@ class local_uniadaptive_external extends external_api {
     }
     public static function update_course_badges_criteria($badges) {
         global $DB;
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         if (!is_array($badges)) {
             throw new moodle_exception('Invalid badges data');
         }
@@ -139,7 +129,7 @@ class local_uniadaptive_external extends external_api {
             }
             $id = $badgeData['id'];
             $newcriterias = $badgeData['conditions'];
-            error_log('Longitud: '.count($newcriterias));
+            // error_log('Longitud: '.count($newcriterias));
             if (!is_array($newcriterias)) {
                 throw new moodle_exception('Invalid conditions data');
             }
@@ -177,7 +167,6 @@ class local_uniadaptive_external extends external_api {
                 $transaction->allow_commit();
             } catch (Exception $e) {
                 $transaction->rollback($e);
-                
                 error_log('ERROR:'. $e->getMessage());
                 return array('result' => false);
             }
@@ -201,27 +190,15 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function get_course_grade_id($courseid){
-        global $DB;
-
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-
         $course_grade = self::getCourseGradeId($courseid);
-
         return array('course_grade_id' => $course_grade);
     }
     private static function getCourseGradeId($courseid){
         global $DB;
-
         $grade_item = $DB->get_record('grade_items', array(
             'courseid' => $courseid,
             'itemtype' => 'course'
         ), '*', MUST_EXIST);
-
         return $grade_item->id;
     }
     public static function get_course_grade_id_returns() {
@@ -231,9 +208,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
-    
-
     //GRADES
     public static function get_coursegrades_parameters() {
         return new external_function_parameters(
@@ -243,24 +217,12 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function get_coursegrades($course_id) {
-        global $DB;
-
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-
-        // Call the getCoursegrades function
         $module_grades = self::getCoursegrades($course_id);
-
         return array('module_grades' => $module_grades);
     }
     // Returns an array with the names of all modules in the course that have grades.
     private static function getCoursegrades($course_id) {
         global $DB;
-
         $module_grades = $DB->get_records_sql(
             "SELECT gi.itemname
                 FROM {grade_items} gi
@@ -269,7 +231,6 @@ class local_uniadaptive_external extends external_api {
                 GROUP BY gi.itemname",
             array('courseid' => $course_id)
         );
-
         return array_keys($module_grades);
     }
     public static function get_coursegrades_returns() {
@@ -295,18 +256,8 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function get_id_grade($courseid, $cmname, $cmmodname, $cminstance) {
-        global $DB;
-
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-
         // Call the getIdGrade function
         $grade_id = self::getIdGrade($courseid, $cmname, $cmmodname, $cminstance);
-
         return array('grade_id' => $grade_id);
     }
     public static function get_id_grade_returns() {
@@ -318,7 +269,6 @@ class local_uniadaptive_external extends external_api {
     }
     private static function getIdGrade($courseid, $cmname, $cmmodname, $cminstance) {
         global $DB;
-
         $grade_item = $DB->get_record('grade_items', array(
             'courseid' => $courseid,
             'itemname' => $cmname,
@@ -326,7 +276,6 @@ class local_uniadaptive_external extends external_api {
             'iteminstance' => $cminstance,
             'itemtype' => 'mod'
         ), '*', MUST_EXIST);
-
         return $grade_item->id;
     }
 
@@ -339,19 +288,21 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function get_course_grade_with_califications($courseid) {
-        global $DB;
-    
-        // Check if the user with the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-    
         // Call the getCourseGradeWithCalifications function
         $grade_id = self::getCourseGradeWithCalifications($courseid);
-    
         return array('grade_id' => $grade_id);
+    }
+    private static function getCourseGradeWithCalifications($courseid) {
+        global $DB;
+        $grade_item = $DB->get_record('grade_items', array(
+            'courseid' => $courseid,
+            'itemtype' => 'course'
+        ));
+        if ($grade_item) {
+            return $grade_item->id;
+        } else {
+            return null;
+        }
     }
     public static function get_course_grade_with_califications_returns() {
         return new external_single_structure(
@@ -360,22 +311,7 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    private static function getCourseGradeWithCalifications($courseid) {
-        global $DB;
     
-        $grade_item = $DB->get_record('grade_items', array(
-            'courseid' => $courseid,
-            'itemtype' => 'course'
-        ));
-    
-        if ($grade_item) {
-            return $grade_item->id;
-        } else {
-            return null;
-        }
-    }
-    
-
     //EXPORT MODULES
     public static function set_modules_list_by_sections_parameters() {
         return new external_function_parameters(
@@ -406,22 +342,12 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function set_modules_list_by_sections($sections, $modules) {
-        global $DB;
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-
         // Call the setModulesListBySections function
         $result = self::setModulesListBySections($sections, $modules);
-
         return array('result' => $result);
     }
     private static function setModulesListBySections($sections, $modules) {
         global $DB;
-
         try {
             $transaction = $DB->start_delegated_transaction();
 
@@ -441,7 +367,6 @@ class local_uniadaptive_external extends external_api {
                     'visible' => $module['lmsVisibility']
                 ));
             }
-
             $transaction->allow_commit();
             purge_all_caches();
             return true;
@@ -475,30 +400,18 @@ class local_uniadaptive_external extends external_api {
         );
     }
     public static function get_course_modules($courseid, $exclude = array(), $invert = false) {
-        global $DB;
-        // Check if the user has the required capability
-        error_log('Supporteds: '.json_encode($exclude));
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-    
         // Call the getCourseModules function
         $modules = self::getCourseModules($courseid, $exclude, $invert);
-    
         return array('modules' => $modules);
     }
     private static function getCourseModules($courseid, $exclude, $invert) {
         global $DB;
-        
         $modulesList = $DB->get_records('course_modules', array('course' => $courseid, 'deletioninprogress' => !$exclude), '', 'id, module, instance, section');
         $modules = array();
         foreach ($modulesList as $cm) {
             $modname = $DB->get_field('modules', 'name', array('id' => $cm->module));
             if ($invert) {
                 if (in_array($modname, $exclude)) {
-                    error_log($modname.': '.in_array($modname, $exclude));
                     $module_data =  $DB->get_record($modname, array('id' => $cm->instance), 'name');
                     $section = $DB->get_record('course_sections', array('id' => $cm->section), 'section');
                     array_push($modules, [
@@ -510,7 +423,6 @@ class local_uniadaptive_external extends external_api {
                 }
             } else {
                 if (!in_array($modname, $exclude)) {
-                    error_log($modname.': '.!in_array($modname, $exclude));
                     $module_data =  $DB->get_record($modname, array('id' => $cm->instance), 'name');
                     $section = $DB->get_record('course_sections', array('id' => $cm->section), 'section');
                     array_push($modules, [
@@ -523,7 +435,6 @@ class local_uniadaptive_external extends external_api {
             }
         }
         return $modules;
-
     }
     public static function get_course_modules_returns() {
         return new external_single_structure(
@@ -555,15 +466,8 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_course_modules_by_type($courseid, $type, $exclude){
         global $DB;
-        // Check if the user with the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         $modules = [];
         $module_name = $DB->get_record('modules', array('name' => $type), 'id, name');
-        
         $modules_course = $DB->get_records('course_modules', array('course' => $courseid, 'module' => $module_name->id, 'deletioninprogress' => (int) !$exclude), '', 'id, instance, section');
         foreach ($modules_course as $module) {
             $module_item = $DB->get_record($type, array('id' =>  $module->instance, 'course' => $courseid), 'name');
@@ -602,18 +506,10 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_modules_list_by_sections_course($courseid) {
         global $DB;
-    
-        // Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-    
         $sections = $DB->get_records('course_sections', array('course' => $courseid), '', 'id, sequence');
         foreach ($sections as $section) {
             $array = explode(",", $section->sequence);
-            error_log(json_encode($array));
+            // error_log(json_encode($array));
             $section->sequence = array_map('intval', $array);
             foreach ($section->sequence as $key =>$sequence) {
                 if($sequence == 0){
@@ -652,31 +548,20 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_course_item_id_for_grade_id($gradeid) {
         global $DB;
-    
-        // Check if the user with the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
-    
         // Get the grade item record
         $grade_item = $DB->get_record('grade_items', array(
             'id' => $gradeid
         ));
-
         if($grade_item->itemtype !== "course"){
             // Get the module record for the course module
             $module = $DB->get_record('modules', array(
                 'name' => $grade_item->itemmodule
             ));
-        
             // Get the course module record for the grade item
             $course_module = $DB->get_record('course_modules', array(
                 'instance' => $grade_item->iteminstance,
                 'module' => $module->id
             ));
-
             return array('itemid' => $course_module->id, 'itemtype' => $grade_item->itemtype);
         } else {
             return array('itemid' => $grade_item->courseid, 'itemtype' => $grade_item->itemtype);
@@ -701,19 +586,12 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_assignable_roles() {
         global $DB;
-        // Get all roles
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         $roles = $DB->get_records('role');
         $result = array();
         foreach ($roles as $role) {
             // Get the capabilities of the role in the system context
             $context = context_system::instance();
             $capabilities = role_context_capabilities($role->id, $context);
-    
             // Check if the role has the 'moodle/badges:awardbadge' capability
             if (isset($capabilities['moodle/badges:awardbadge']) && $capabilities['moodle/badges:awardbadge']) {
                 $result[] = array(
@@ -722,7 +600,6 @@ class local_uniadaptive_external extends external_api {
                 );
             }
         }
-    
         return $result;
     }
     public static function get_assignable_roles_returns() {
@@ -750,11 +627,6 @@ class local_uniadaptive_external extends external_api {
         // Get the competencies for the course
         $course_comps = $DB->get_records('competency_coursecomp', array('courseid' => $courseid), '', 'id, competencyid');
         $result = [];
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         foreach ($course_comps as $competency) {
             $comps_data = $DB->get_records('competency', array('id' => $competency->competencyid),'', 'id, shortname');
             foreach ($comps_data as $comp_data) {
@@ -765,7 +637,6 @@ class local_uniadaptive_external extends external_api {
             }
             
         }
-        error_log('RESULT: '.json_encode($result));
         return $result;
     }
     
@@ -869,19 +740,9 @@ class local_uniadaptive_external extends external_api {
     public static function update_course($data) {
         global $CFG, $DB;
         require_once($CFG->libdir . '/gradelib.php');
-        error_log('ENTRO');
-        // return array('status' => false, 'error' => 'TEST');
         $sections = $data['sections'];
         $modules = $data['modules'];
         $badges = $data['badges'];
-        // error_log(json_encode($modules));
-        // return array('status' => false, 'error' => 'TEST_FUNCTION');
-        //Check if the user has the required capability
-        $context = context_system::instance();
-        self::validate_context($context);
-        if (!has_capability('moodle/course:update', $context)) {
-            return array('status' => false, 'error' => 'PERMISSION_DENIED');
-        }
         try {
             $transaction = $DB->start_delegated_transaction();
             // Update modules and sections
@@ -891,18 +752,13 @@ class local_uniadaptive_external extends external_api {
                         if(count( $section['sequence']) > 1){
                             $sequence = implode(',', $section['sequence']);
                         }else{
-                            
                             $sequence =  $section['sequence'][0];
                         }
-                        
                         $DB->set_field('course_sections', 'sequence', $sequence , array('id' => $section['id']));
                     }else{
                         $DB->set_field('course_sections', 'sequence', '' , array('id' => $section['id']));
                     }
-                    
                 }
-                
-                
             }
 
             if($modules !== null && is_array($modules) && count($modules) > 0){
@@ -914,7 +770,6 @@ class local_uniadaptive_external extends external_api {
                         $conditions = $module['c'];
                     }
                     $completion = 0;
-                    // error_log('Modulo: '.print_r($module, true));
                     if(isset($module['g'])){
                         $course_module = $DB->get_record('course_modules', array('id' => $module['id']), 'id, course, module, instance');
                         $module_record = $DB->get_record('modules', array('id' => $course_module->module));
@@ -941,10 +796,7 @@ class local_uniadaptive_external extends external_api {
                                 }
                                 break;
                         }
-                        
-                        
                         if($grade_item){
-                            
                             switch ($module_record->name) {
                                 case 'quiz':
                                     $DB->update_record('grade_items', (object)array(
@@ -965,7 +817,6 @@ class local_uniadaptive_external extends external_api {
                                         'id' => $course_module->instance,
                                         'assessed' => $module['g']['hasToBeQualified'] ? 3 : 0
                                     ));
-
                                     break;
                                 default:
                                     $DB->update_record('grade_items', (object)array(
@@ -977,7 +828,6 @@ class local_uniadaptive_external extends external_api {
                                     ));
                                     break;
                             }
-                            
                         }else{
                             switch ($module_record->name) {
                                 case 'resource':
@@ -989,7 +839,7 @@ class local_uniadaptive_external extends external_api {
                                 case 'url':
                                     break;
                                 default:
-                                    error_log('ENTRO');
+                                    // error_log('ENTRO');
                                     $data_item = $DB->get_record($module_record->name, array('id' => $course_module->instance, 'course' => $course_module->course));
                                     $DB->update_record($module_record->name, (object)array(
                                         'id' => $course_module->instance,
@@ -1024,10 +874,8 @@ class local_uniadaptive_external extends external_api {
                                     $new_grade_item->id = $DB->insert_record('grade_items', $new_grade_item);
                                     break;
                             }
-                            
                         }
                     }
-                    
                     $DB->update_record('course_modules', (object)array(
                         'id' => $module['id'],
                         'section' => $module['section'],
@@ -1038,10 +886,8 @@ class local_uniadaptive_external extends external_api {
                         'completionview' => (int) $module['g']['hasToBeSeen'],
                         'completiongradeitemnumber' => $module['g']['hasToBeQualified'] ? 0 : null
                     ));
-                    
                 }
                 $grade_items = $DB->get_records('grade_items', array('courseid' => $course_id->course, 'itemtype' => 'mod', 'gradetype' => 1));
-
                 $sum_grademax = 0;
                 foreach ($grade_items as $grade_item) {
                     $sum_grademax += $grade_item->grademax;
@@ -1054,10 +900,10 @@ class local_uniadaptive_external extends external_api {
                 foreach ($grade_items as $grade_item) {
                     $DB->update_record('grade_items', (object)array(
                         'id' => $grade_item->id,
-                        'aggregationcoef2' => $grade_item->grademax / $sum_grademax
+                        'aggregationcoef2' => $grade_item->grademax / $sum_grademax,
+                        'weightoverride' => 0
                     ));
                 }
-
             }
             // Update badges
             if ($badges !== null && is_array($badges) && count($badges) > 0) {
@@ -1108,7 +954,6 @@ class local_uniadaptive_external extends external_api {
             return array('status' => true, 'error' => '');
         } catch (\Exception $e) {
             // An error occurred, the changes will be reverted automatically.
-            error_log('Fallo');
             error_log($e);
             return array('status' => false, 'error' => 'ERROR_OCURRED');
         }
@@ -1121,7 +966,6 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-
     // Get califications
     public static function get_module_data_parameters() {
         return new external_function_parameters(
@@ -1133,17 +977,13 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_module_data($moduleid, $itemmodule) {
         global $DB;
-        // error_log($moduleid);
         // Get the data from mdl_course_modules
         $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
-        
         // Get the instance ID of the module
         $module_instance_id = $course_module->instance;
-    
         // Get the data from mdl_grade_items
         $grade_item = $DB->get_record('grade_items', array('iteminstance' => $module_instance_id, 'itemmodule' => $itemmodule), 'gradetype, grademax, gradepass, scaleid');
         $module_data = '';
-        error_log($itemmodule);
         // Depending on the type of module, get the corresponding data
         switch ($itemmodule) {
             case 'quiz':
@@ -1156,7 +996,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "10.00000": $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
@@ -1174,7 +1014,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
@@ -1192,7 +1032,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
@@ -1210,7 +1050,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
@@ -1228,7 +1068,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
                             'hasToSelect' => (bool) $module_data->completionsubmit
                         ],
                     ];
@@ -1246,7 +1086,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
                             'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
-                            'max' => $grade_item->grademax == null ? "0.00000": $grade_item->grademax,
+                            'max' => $grade_item->grademax == null ? "100.00000": $grade_item->grademax,
                             'hasToSelect' => false
                         ],
                     ];
@@ -1269,39 +1109,30 @@ class local_uniadaptive_external extends external_api {
                 return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data'=> $result);
                 break;
                 // throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
-                
         }
-        
-
-        
     }
     public static function get_module_data_returns() {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'Status'),
                 'error' => new external_value(PARAM_TEXT, 'Error message'),
-                'data' =>
-                    new external_single_structure(
-                        array(
-                            'hasConditions' => new external_value(PARAM_BOOL, 'Competency ID'),
-                            'hasToBeSeen' => new external_value(PARAM_BOOL, 'Competency name'),
-                            'hasToBeQualified' => new external_value(PARAM_BOOL, 'Competency name'),
-                            'data' => 
-                                new external_single_structure(
-                                    array(
-                                        'min' => new external_value(PARAM_RAW, 'Competency ID'),
-                                        'max' => new external_value(PARAM_RAW, 'Competency name'),
-                                        'hasToSelect' => new external_value(PARAM_BOOL, 'Competency name'),
-                                    )
-                                )
-                            
+                'data' => new external_single_structure(
+                    array(
+                        'hasConditions' => new external_value(PARAM_BOOL, 'Competency ID'),
+                        'hasToBeSeen' => new external_value(PARAM_BOOL, 'Competency name'),
+                        'hasToBeQualified' => new external_value(PARAM_BOOL, 'Competency name'),
+                        'data' => new external_single_structure(
+                            array(
+                                'min' => new external_value(PARAM_RAW, 'Competency ID'),
+                                'max' => new external_value(PARAM_RAW, 'Competency name'),
+                                'hasToSelect' => new external_value(PARAM_BOOL, 'Competency name'),
+                            )
                         )
-                    )
-                
+                    ),
+                    'data',
+                    VALUE_OPTIONAL
+                )
             )
         );
     }
-    
-    
-    
 }
