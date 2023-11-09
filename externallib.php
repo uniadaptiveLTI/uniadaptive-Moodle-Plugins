@@ -977,7 +977,6 @@ class local_uniadaptive_external extends external_api {
     }
     public static function get_module_data($moduleid, $itemmodule) {
         global $DB;
-        // error_log('ENTRO EN get_module_data');
         // Get the data from mdl_course_modules
         $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
         // Get the instance ID of the module
@@ -1049,6 +1048,37 @@ class local_uniadaptive_external extends external_api {
                     'data',
                     VALUE_OPTIONAL
                 )
+            )
+        );
+    }
+    public static function check_user_parameters(){
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
+                'userid' => new external_value(PARAM_INT, 'User ID', VALUE_REQUIRED)
+            )
+        );
+    }
+
+    public static function check_user($courseid, $userid){
+        error_log('ENTRO EN check_user');
+        $context = context_course::instance($courseid);
+        self::validate_context($context);
+        if(has_capability('moodle/site:config', $context, $userid)){
+            return array('authorized' => 4);
+        }elseif(has_capability('moodle/course:update', $context, $userid)){
+            return array('authorized' => 3);
+        }elseif(has_capability('mod/assign:grade', $context, $userid)){
+            return array('authorized' => 2);
+        }else{
+            return array('authorized' => 1);
+        }
+    }
+
+    public static function check_user_returns(){
+        return new external_single_structure(
+            array(
+                'authorized' => new external_value(PARAM_INT, 'Authorized')
             )
         );
     }

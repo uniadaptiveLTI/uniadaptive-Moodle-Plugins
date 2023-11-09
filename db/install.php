@@ -56,7 +56,8 @@ function xmldb_local_uniadaptive_install() {
         'local_uniadaptive_get_course_competencies',
         'local_uniadaptive_update_course',
         'local_uniadaptive_get_module_data',
-        'local_uniadaptive_get_course_grade_id'
+        'local_uniadaptive_get_course_grade_id',
+        'local_uniadaptive_check_user'
         // Add any other function names here.
     );
 
