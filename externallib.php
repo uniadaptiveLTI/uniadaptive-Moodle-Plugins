@@ -781,6 +781,7 @@ class local_uniadaptive_external extends external_api {
                             case 'folder':
                             case 'label':
                             case 'generic':
+                            case 'choice':
                             case 'book':
                             case 'page':
                             case 'url':
@@ -834,6 +835,7 @@ class local_uniadaptive_external extends external_api {
                                 case 'folder':
                                 case 'label':
                                 case 'generic':
+                                case 'choice':
                                 case 'book':
                                 case 'page':
                                 case 'url':
