@@ -3,17 +3,20 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . "/externallib.php");
 
-class local_uniadaptive_external extends external_api {
+class local_uniadaptive_external extends external_api
+{
 
     //BADGES
-    public static function get_course_badges_parameters() {
+    public static function get_course_badges_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED)
             )
         );
     }
-    public static function get_course_badges($courseid) {
+    public static function get_course_badges($courseid)
+    {
         global $DB;
         // Get the badges for the course
         $badges = $DB->get_records_sql("SELECT id, name FROM {badge} WHERE courseid = :courseid AND status <> :status", ['courseid' => $courseid, 'status' => 1]);
@@ -50,7 +53,8 @@ class local_uniadaptive_external extends external_api {
 
         return $result;
     }
-    public static function get_course_badges_returns() {
+    public static function get_course_badges_returns()
+    {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
@@ -81,7 +85,8 @@ class local_uniadaptive_external extends external_api {
     }
 
     //UPDATE BADGES
-    public static function update_course_badges_criteria_parameters() {
+    public static function update_course_badges_criteria_parameters()
+    {
         return new external_function_parameters(
             array(
                 'badges' => new external_multiple_structure(
@@ -95,18 +100,18 @@ class local_uniadaptive_external extends external_api {
                                         'method' => new external_value(PARAM_INT, 'Method', VALUE_REQUIRED),
                                         'descriptionformat' => new external_value(PARAM_INT, 'Description Format', VALUE_REQUIRED),
                                         'description' => new external_value(PARAM_TEXT, 'Description', VALUE_REQUIRED),
-                                        'params' => new external_multiple_structure( 
+                                        'params' => new external_multiple_structure(
                                             new external_single_structure(
                                                 array(
                                                     'name' => new external_value(PARAM_TEXT, 'Name', VALUE_OPTIONAL),
                                                     'value' => new external_value(PARAM_TEXT, 'Value', VALUE_OPTIONAL),
                                                 )
-                                            ), 
-                                            'Params', 
+                                            ),
+                                            'Params',
                                             VALUE_OPTIONAL
                                         ),
-                                    ), 
-                                    'Conditions', 
+                                    ),
+                                    'Conditions',
                                     VALUE_REQUIRED
                                 ),
                             )
@@ -118,7 +123,8 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function update_course_badges_criteria($badges) {
+    public static function update_course_badges_criteria($badges)
+    {
         global $DB;
         if (!is_array($badges)) {
             throw new moodle_exception('Invalid badges data');
@@ -144,7 +150,7 @@ class local_uniadaptive_external extends external_api {
                     $DB->delete_records('badge_criteria_param', array('critid' => $criterion->id));
                     $DB->delete_records('badge_criteria', array('id' => $criterion->id));
                 }
-                if(count($newcriterias) > 1){
+                if (count($newcriterias) > 1) {
                     foreach ($newcriterias as $newcriteria) {
                         $criterion = new stdClass();
                         $criterion->badgeid = $badge->id;
@@ -167,13 +173,14 @@ class local_uniadaptive_external extends external_api {
                 $transaction->allow_commit();
             } catch (Exception $e) {
                 $transaction->rollback($e);
-                error_log('ERROR:'. $e->getMessage());
+                error_log('ERROR:' . $e->getMessage());
                 return array('result' => false);
             }
         }
         return array('result' => true);
     }
-    public static function update_course_badges_criteria_returns() {
+    public static function update_course_badges_criteria_returns()
+    {
         return new external_single_structure(
             array(
                 'result' => new external_value(PARAM_BOOL, 'Result')
@@ -182,18 +189,21 @@ class local_uniadaptive_external extends external_api {
     }
 
     //Get course id grade
-    public static function get_course_grade_id_parameters() {
+    public static function get_course_grade_id_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID')
             )
         );
     }
-    public static function get_course_grade_id($courseid){
+    public static function get_course_grade_id($courseid)
+    {
         $course_grade = self::getCourseGradeId($courseid);
         return array('course_grade_id' => $course_grade);
     }
-    private static function getCourseGradeId($courseid){
+    private static function getCourseGradeId($courseid)
+    {
         global $DB;
         $grade_item = $DB->get_record('grade_items', array(
             'courseid' => $courseid,
@@ -201,7 +211,8 @@ class local_uniadaptive_external extends external_api {
         ), '*', MUST_EXIST);
         return $grade_item->id;
     }
-    public static function get_course_grade_id_returns() {
+    public static function get_course_grade_id_returns()
+    {
         return new external_single_structure(
             array(
                 'course_grade_id' => new external_value(PARAM_INT, 'Course grade ID')
@@ -209,19 +220,22 @@ class local_uniadaptive_external extends external_api {
         );
     }
     //GRADES
-    public static function get_coursegrades_parameters() {
+    public static function get_coursegrades_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID')
             )
         );
     }
-    public static function get_coursegrades($course_id) {
+    public static function get_coursegrades($course_id)
+    {
         $module_grades = self::getCoursegrades($course_id);
         return array('module_grades' => $module_grades);
     }
     // Returns an array with the names of all modules in the course that have grades.
-    private static function getCoursegrades($course_id) {
+    private static function getCoursegrades($course_id)
+    {
         global $DB;
         $module_grades = $DB->get_records_sql(
             "SELECT gi.itemname
@@ -233,7 +247,8 @@ class local_uniadaptive_external extends external_api {
         );
         return array_keys($module_grades);
     }
-    public static function get_coursegrades_returns() {
+    public static function get_coursegrades_returns()
+    {
         return new external_single_structure(
             array(
                 'module_grades' => new external_multiple_structure(
@@ -245,7 +260,8 @@ class local_uniadaptive_external extends external_api {
 
 
     //ID GRADES
-    public static function get_id_grade_parameters() {
+    public static function get_id_grade_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID'),
@@ -255,19 +271,22 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function get_id_grade($courseid, $cmname, $cmmodname, $cminstance) {
+    public static function get_id_grade($courseid, $cmname, $cmmodname, $cminstance)
+    {
         // Call the getIdGrade function
         $grade_id = self::getIdGrade($courseid, $cmname, $cmmodname, $cminstance);
         return array('grade_id' => $grade_id);
     }
-    public static function get_id_grade_returns() {
+    public static function get_id_grade_returns()
+    {
         return new external_single_structure(
             array(
                 'grade_id' => new external_value(PARAM_INT, 'Grade ID')
             )
         );
     }
-    private static function getIdGrade($courseid, $cmname, $cmmodname, $cminstance) {
+    private static function getIdGrade($courseid, $cmname, $cmmodname, $cminstance)
+    {
         global $DB;
         $grade_item = $DB->get_record('grade_items', array(
             'courseid' => $courseid,
@@ -280,19 +299,22 @@ class local_uniadaptive_external extends external_api {
     }
 
     //ID GRADE COURSE
-    public static function get_course_grade_with_califications_parameters() {
+    public static function get_course_grade_with_califications_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID')
             )
         );
     }
-    public static function get_course_grade_with_califications($courseid) {
+    public static function get_course_grade_with_califications($courseid)
+    {
         // Call the getCourseGradeWithCalifications function
         $grade_id = self::getCourseGradeWithCalifications($courseid);
         return array('grade_id' => $grade_id);
     }
-    private static function getCourseGradeWithCalifications($courseid) {
+    private static function getCourseGradeWithCalifications($courseid)
+    {
         global $DB;
         $grade_item = $DB->get_record('grade_items', array(
             'courseid' => $courseid,
@@ -304,16 +326,18 @@ class local_uniadaptive_external extends external_api {
             return null;
         }
     }
-    public static function get_course_grade_with_califications_returns() {
+    public static function get_course_grade_with_califications_returns()
+    {
         return new external_single_structure(
             array(
                 'grade_id' => new external_value(PARAM_INT, 'Grade item ID', VALUE_OPTIONAL)
             )
         );
     }
-    
+
     //EXPORT MODULES
-    public static function set_modules_list_by_sections_parameters() {
+    public static function set_modules_list_by_sections_parameters()
+    {
         return new external_function_parameters(
             array(
                 'sections' => new external_multiple_structure(
@@ -341,12 +365,14 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function set_modules_list_by_sections($sections, $modules) {
+    public static function set_modules_list_by_sections($sections, $modules)
+    {
         // Call the setModulesListBySections function
         $result = self::setModulesListBySections($sections, $modules);
         return array('result' => $result);
     }
-    private static function setModulesListBySections($sections, $modules) {
+    private static function setModulesListBySections($sections, $modules)
+    {
         global $DB;
         try {
             $transaction = $DB->start_delegated_transaction();
@@ -376,7 +402,8 @@ class local_uniadaptive_external extends external_api {
             return false;
         }
     }
-    public static function set_modules_list_by_sections_returns() {
+    public static function set_modules_list_by_sections_returns()
+    {
         return new external_single_structure(
             array(
                 'result' => new external_value(PARAM_BOOL, 'Result')
@@ -385,7 +412,8 @@ class local_uniadaptive_external extends external_api {
     }
 
     //GET MODULES
-    public static function get_course_modules_parameters() {
+    public static function get_course_modules_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID'),
@@ -399,12 +427,14 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function get_course_modules($courseid, $exclude = array(), $invert = false) {
+    public static function get_course_modules($courseid, $exclude = array(), $invert = false)
+    {
         // Call the getCourseModules function
         $modules = self::getCourseModules($courseid, $exclude, $invert);
         return array('modules' => $modules);
     }
-    private static function getCourseModules($courseid, $exclude, $invert) {
+    private static function getCourseModules($courseid, $exclude, $invert)
+    {
         global $DB;
         $modulesList = $DB->get_records('course_modules', array('course' => $courseid, 'deletioninprogress' => !$exclude), '', 'id, module, instance, section');
         $modules = array();
@@ -436,7 +466,8 @@ class local_uniadaptive_external extends external_api {
         }
         return $modules;
     }
-    public static function get_course_modules_returns() {
+    public static function get_course_modules_returns()
+    {
         return new external_single_structure(
             array(
                 'modules' => new external_multiple_structure(
@@ -452,10 +483,11 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
+
 
     //GET MODULES BY TYPE
-    public static function get_course_modules_by_type_parameters(){
+    public static function get_course_modules_by_type_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID'),
@@ -464,7 +496,8 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function get_course_modules_by_type($courseid, $type, $exclude){
+    public static function get_course_modules_by_type($courseid, $type, $exclude)
+    {
         global $DB;
         $modules = [];
         $module_name = $DB->get_record('modules', array('name' => $type), 'id, name');
@@ -480,7 +513,8 @@ class local_uniadaptive_external extends external_api {
         }
         return ['modules' => $modules];
     }
-    public static function get_course_modules_by_type_returns() {
+    public static function get_course_modules_by_type_returns()
+    {
         return new external_single_structure(
             array(
                 'modules' => new external_multiple_structure(
@@ -495,33 +529,36 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    
+
     //GET MODULES LIST BY SECTIONS COURSE
-    public static function get_modules_list_by_sections_course_parameters() {
+    public static function get_modules_list_by_sections_course_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID')
             )
         );
     }
-    public static function get_modules_list_by_sections_course($courseid) {
+    public static function get_modules_list_by_sections_course($courseid)
+    {
         global $DB;
         $sections = $DB->get_records('course_sections', array('course' => $courseid), '', 'id, sequence');
         foreach ($sections as $section) {
             $array = explode(",", $section->sequence);
             // error_log(json_encode($array));
             $section->sequence = array_map('intval', $array);
-            foreach ($section->sequence as $key =>$sequence) {
-                if($sequence == 0){
+            foreach ($section->sequence as $key => $sequence) {
+                if ($sequence == 0) {
                     // array_push($sections, $sequence);
                     unset($section->sequence[$key]);
                 }
             }
         }
-    
+
         return array('sections' => array_values($sections));
     }
-    public static function get_modules_list_by_sections_course_returns() {
+    public static function get_modules_list_by_sections_course_returns()
+    {
         return new external_single_structure(
             array(
                 'sections' => new external_multiple_structure(
@@ -539,20 +576,22 @@ class local_uniadaptive_external extends external_api {
     }
 
     //ITEM FOR GRADE ID
-    public static function get_course_item_id_for_grade_id_parameters() {
+    public static function get_course_item_id_for_grade_id_parameters()
+    {
         return new external_function_parameters(
             array(
                 'gradeid' => new external_value(PARAM_INT, 'Grade item ID')
             )
         );
     }
-    public static function get_course_item_id_for_grade_id($gradeid) {
+    public static function get_course_item_id_for_grade_id($gradeid)
+    {
         global $DB;
         // Get the grade item record
         $grade_item = $DB->get_record('grade_items', array(
             'id' => $gradeid
         ));
-        if($grade_item->itemtype !== "course"){
+        if ($grade_item->itemtype !== "course") {
             // Get the module record for the course module
             $module = $DB->get_record('modules', array(
                 'name' => $grade_item->itemmodule
@@ -567,7 +606,8 @@ class local_uniadaptive_external extends external_api {
             return array('itemid' => $grade_item->courseid, 'itemtype' => $grade_item->itemtype);
         }
     }
-    public static function get_course_item_id_for_grade_id_returns() {
+    public static function get_course_item_id_for_grade_id_returns()
+    {
         return new external_single_structure(
             array(
                 'itemid' => new external_value(PARAM_INT, 'Course module ID', VALUE_OPTIONAL),
@@ -577,14 +617,16 @@ class local_uniadaptive_external extends external_api {
     }
 
     //GET ROLES
-    public static function get_assignable_roles_parameters() {
+    public static function get_assignable_roles_parameters()
+    {
         return new external_function_parameters(
             array(
                 'contextid' => new external_value(PARAM_INT, 'Context ID')
             )
         );
     }
-    public static function get_assignable_roles() {
+    public static function get_assignable_roles()
+    {
         global $DB;
         $roles = $DB->get_records('role');
         $result = array();
@@ -602,7 +644,8 @@ class local_uniadaptive_external extends external_api {
         }
         return $result;
     }
-    public static function get_assignable_roles_returns() {
+    public static function get_assignable_roles_returns()
+    {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
@@ -614,33 +657,35 @@ class local_uniadaptive_external extends external_api {
     }
 
     //COMPETENCIES
-    public static function get_course_competencies_parameters() {
+    public static function get_course_competencies_parameters()
+    {
         return new external_function_parameters(
             array(
                 'idnumber' => new external_value(PARAM_TEXT, 'Course ID number')
             )
         );
     }
-    
-    public static function get_course_competencies($courseid) {
+
+    public static function get_course_competencies($courseid)
+    {
         global $DB;
         // Get the competencies for the course
         $course_comps = $DB->get_records('competency_coursecomp', array('courseid' => $courseid), '', 'id, competencyid');
         $result = [];
         foreach ($course_comps as $competency) {
-            $comps_data = $DB->get_records('competency', array('id' => $competency->competencyid),'', 'id, shortname');
+            $comps_data = $DB->get_records('competency', array('id' => $competency->competencyid), '', 'id, shortname');
             foreach ($comps_data as $comp_data) {
-                array_push($result,[
+                array_push($result, [
                     'id' => $comp_data->id,
                     'name' => $comp_data->shortname
                 ]);
             }
-            
         }
         return $result;
     }
-    
-    public static function get_course_competencies_returns() {
+
+    public static function get_course_competencies_returns()
+    {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
@@ -650,9 +695,10 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-   
+
     //UPDATE COURSE
-    public static function update_course_parameters() {   
+    public static function update_course_parameters()
+    {
         return new external_function_parameters(
             array(
                 'data' => new external_single_structure(
@@ -663,8 +709,8 @@ class local_uniadaptive_external extends external_api {
                                     'id' => new external_value(PARAM_INT, 'Section ID', VALUE_OPTIONAL),
                                     'sequence' => new external_multiple_structure(
                                         new external_value(PARAM_RAW, 'Module ID sequence', VALUE_OPTIONAL),
-                                         'sequence',
-                                          VALUE_OPTIONAL
+                                        'sequence',
+                                        VALUE_OPTIONAL
                                     )
                                 )
                             ),
@@ -712,32 +758,33 @@ class local_uniadaptive_external extends external_api {
                                                 'method' => new external_value(PARAM_INT, 'Method', VALUE_OPTIONAL),
                                                 'descriptionformat' => new external_value(PARAM_INT, 'Description Format', VALUE_OPTIONAL),
                                                 'description' => new external_value(PARAM_TEXT, 'Description', VALUE_OPTIONAL),
-                                                'params' => new external_multiple_structure( 
+                                                'params' => new external_multiple_structure(
                                                     new external_single_structure(
                                                         array(
                                                             'name' => new external_value(PARAM_TEXT, 'Name', VALUE_OPTIONAL),
                                                             'value' => new external_value(PARAM_TEXT, 'Value', VALUE_OPTIONAL),
                                                         )
-                                                    ), 
-                                                    'Params', 
+                                                    ),
+                                                    'Params',
                                                     VALUE_OPTIONAL
                                                 ),
-                                            ), 
+                                            ),
                                         ),
-                                        'Conditions', 
+                                        'Conditions',
                                         VALUE_OPTIONAL
                                     ),
                                 ),
                             ),
                             'Badges',
                             VALUE_OPTIONAL
-                        )                
+                        )
                     )
                 )
             )
         );
     }
-    public static function update_course($data) {
+    public static function update_course($data)
+    {
         global $CFG, $DB;
         require_once($CFG->libdir . '/gradelib.php');
         $sections = $data['sections'];
@@ -746,22 +793,22 @@ class local_uniadaptive_external extends external_api {
         try {
             $transaction = $DB->start_delegated_transaction();
             // Update modules and sections
-            if($sections !== null && is_array($sections) && count($sections) > 0){
+            if ($sections !== null && is_array($sections) && count($sections) > 0) {
                 foreach ($sections as $section) {
-                    if(isset($section['sequence'])){
-                        if(count( $section['sequence']) > 1){
+                    if (isset($section['sequence'])) {
+                        if (count($section['sequence']) > 1) {
                             $sequence = implode(',', $section['sequence']);
-                        }else{
+                        } else {
                             $sequence =  $section['sequence'][0];
                         }
-                        $DB->set_field('course_sections', 'sequence', $sequence , array('id' => $section['id']));
-                    }else{
-                        $DB->set_field('course_sections', 'sequence', '' , array('id' => $section['id']));
+                        $DB->set_field('course_sections', 'sequence', $sequence, array('id' => $section['id']));
+                    } else {
+                        $DB->set_field('course_sections', 'sequence', '', array('id' => $section['id']));
                     }
                 }
             }
 
-            if($modules !== null && is_array($modules) && count($modules) > 0){
+            if ($modules !== null && is_array($modules) && count($modules) > 0) {
                 $course_id = $DB->get_record('course_modules', array('id' => $modules[0]['id']), 'course');
                 $grade_items = $DB->get_records('grade_items', array('courseid' => $course_id->course, 'itemtype' => 'mod'));
                 foreach ($modules as $module) {
@@ -770,39 +817,37 @@ class local_uniadaptive_external extends external_api {
                         $conditions = $module['c'];
                     }
                     $completion = 0;
-                    if(isset($module['g'])){
+                    if (isset($module['g'])) {
                         $course_module = $DB->get_record('course_modules', array('id' => $module['id']), 'id, course, module, instance');
                         $module_record = $DB->get_record('modules', array('id' => $course_module->module));
                         $grade_item = $DB->get_record('grade_items', array('iteminstance' => $course_module->instance, 'itemmodule' => $module_record->name));
                         $gradepass = (float) $module['g']['data']['min'];
                         $grademax = (float) $module['g']['data']['max'];
                         switch ($module_record->name) {
-                            case 'resource':
-                            case 'folder':
-                            case 'label':
-                            case 'generic':
-                            case 'choice':
-                            case 'book':
-                            case 'page':
-                            case 'url':
-                                if($module['g']['hasToBeSeen']){
+                            case 'assign':
+                            case 'forum':
+                            case 'glossary':
+                            case 'quiz':
+                            case 'workshop':
+                                if ($module['g']['hasConditions']) {
                                     $completion++;
+                                    if ($module['g']['hasToBeSeen'] || $module['g']['hasToBeQualified'])
+                                        $completion++;
                                 }
+
                                 break;
                             default:
-                                if($module['g']['hasConditions']){
-                                    $completion++;
-                                    if($module['g']['hasToBeSeen'] || $module['g']['hasToBeQualified'])
-                                    $completion++;
+                                if ($module['g']['hasToBeSeen']) {
+                                    $completion = 2;
                                 }
                                 break;
                         }
-                        if($grade_item){
+                        if ($grade_item) {
                             switch ($module_record->name) {
                                 case 'quiz':
                                     $DB->update_record('grade_items', (object)array(
                                         'id' => $grade_item->id,
-                                        'gradepass' => $gradepass < 1 ? 100: $gradepass,
+                                        'gradepass' => $gradepass < 1 ? 100 : $gradepass,
                                         'gradetype' => $module['g']['hasConditions'] && $module['g']['hasToBeQualified'] ? 1 : 3
                                     ));
                                     break;
@@ -811,7 +856,7 @@ class local_uniadaptive_external extends external_api {
                                     $DB->update_record('grade_items', (object)array(
                                         'id' => $grade_item->id,
                                         'gradepass' => $gradepass,
-                                        'grademax' => $grademax < 1 ? 100: $grademax,
+                                        'grademax' => $grademax < 1 ? 100 : $grademax,
                                         'gradetype' => $module['g']['hasConditions'] && $module['g']['hasToBeQualified'] ? 1 : 3
                                     ));
                                     $DB->update_record($module_record->name, (object)array(
@@ -822,25 +867,20 @@ class local_uniadaptive_external extends external_api {
                                 default:
                                     $DB->update_record('grade_items', (object)array(
                                         'id' => $grade_item->id,
-                                        'gradepass' => $gradepass < 1 ? 0: $gradepass,
-                                        'grademax' => $grademax < 1 ? 100: $grademax,
+                                        'gradepass' => $gradepass < 1 ? 0 : $gradepass,
+                                        'grademax' => $grademax < 1 ? 100 : $grademax,
                                         'gradetype' => $module['g']['hasConditions'] && $module['g']['hasToBeQualified'] ? 1 : 3
                                         //AQUI
                                     ));
                                     break;
                             }
-                        }else{
+                        } else {
                             switch ($module_record->name) {
-                                case 'resource':
-                                case 'folder':
-                                case 'label':
-                                case 'generic':
-                                case 'choice':
-                                case 'book':
-                                case 'page':
-                                case 'url':
-                                    break;
-                                default:
+                                case 'assign':
+                                case 'forum':
+                                case 'glossary':
+                                case 'quiz':
+                                case 'workshop':
                                     // error_log('ENTRO');
                                     $data_item = $DB->get_record($module_record->name, array('id' => $course_module->instance, 'course' => $course_module->course));
                                     $DB->update_record($module_record->name, (object)array(
@@ -853,10 +893,9 @@ class local_uniadaptive_external extends external_api {
                                         if ($grade_item->sortorder > $max_sortorder) {
                                             $max_sortorder = $grade_item->sortorder;
                                         }
-                                        if ($grade_item->categoryid != null){
+                                        if ($grade_item->categoryid != null) {
                                             $category_id = $grade_item->categoryid;
                                         }
-                                        
                                     }
                                     $new_grade_item = new stdClass();
                                     $new_grade_item->courseid = $course_id->course;
@@ -953,23 +992,26 @@ class local_uniadaptive_external extends external_api {
             // Commit transaction
             $transaction->allow_commit();
             purge_all_caches();
-            return array('status' => true, 'error' => '');
+            return array('status' => true, 'error' => '', 'data' => '');
         } catch (\Exception $e) {
             // An error occurred, the changes will be reverted automatically.
             error_log($e);
-            return array('status' => false, 'error' => 'ERROR_OCURRED');
+            return array('status' => false, 'error' => 'ERROR_OCURRED', 'data' => json_encode($e));
         }
     }
-    public static function update_course_returns() {
+    public static function update_course_returns()
+    {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'Status'),
-                'error' => new external_value(PARAM_TEXT, 'Error message')
+                'error' => new external_value(PARAM_TEXT, 'Error message'),
+                'data' => new external_value(PARAM_TEXT, 'Error datos')
             )
         );
     }
     // Get califications
-    public static function get_module_data_parameters() {
+    public static function get_module_data_parameters()
+    {
         return new external_function_parameters(
             array(
                 'moduleid' => new external_value(PARAM_INT, 'Module ID', VALUE_REQUIRED),
@@ -977,7 +1019,8 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function get_module_data($moduleid, $itemmodule) {
+    public static function get_module_data($moduleid, $itemmodule)
+    {
         global $DB;
         // Get the data from mdl_course_modules
         $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
@@ -1002,7 +1045,7 @@ class local_uniadaptive_external extends external_api {
                         'hasToBeSeen' => (bool) $course_module->completionview,
                         'hasToBeQualified' => $course_module->completiongradeitemnumber == null || $course_module->completiongradeitemnumber == 1 ? false : true,
                         'data' => [
-                            'min' => $grade_item->gradepass == null ? "0.00000": $grade_item->gradepass,
+                            'min' => $grade_item->gradepass == null ? "0.00000" : $grade_item->gradepass,
                             'max' => $grade_item->grademax == null ? ($itemmodule == 'quiz' ? "10.00000" : "100.00000") : $grade_item->grademax,
                             'hasToSelect' => false
                         ],
@@ -1010,9 +1053,9 @@ class local_uniadaptive_external extends external_api {
                 }
                 // error_log(json_encode($result));
                 // error_log('SALGO');
-                return array('status' => true, 'error' => '', 'data'=> $result);
+                return array('status' => true, 'error' => '', 'data' => $result);
                 break;
-            // Add here more cases for other module types
+                // Add here more cases for other module types
             default:
                 $result = [
                     'hasConditions' => $course_module->completion > 0 ? true : false,
@@ -1024,12 +1067,13 @@ class local_uniadaptive_external extends external_api {
                         'hasToSelect' => false
                     ],
                 ];
-                return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data'=> $result);
+                return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data' => $result);
                 break;
                 // throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
         }
     }
-    public static function get_module_data_returns() {
+    public static function get_module_data_returns()
+    {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'Status'),
@@ -1053,7 +1097,8 @@ class local_uniadaptive_external extends external_api {
             )
         );
     }
-    public static function check_user_parameters(){
+    public static function check_user_parameters()
+    {
         return new external_function_parameters(
             array(
                 'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
@@ -1062,22 +1107,24 @@ class local_uniadaptive_external extends external_api {
         );
     }
 
-    public static function check_user($courseid, $userid){
+    public static function check_user($courseid, $userid)
+    {
         error_log('ENTRO EN check_user');
         $context = context_course::instance($courseid);
         self::validate_context($context);
-        if(has_capability('moodle/site:config', $context, $userid)){
+        if (has_capability('moodle/site:config', $context, $userid)) {
             return array('authorized' => 4);
-        }elseif(has_capability('moodle/course:update', $context, $userid)){
+        } elseif (has_capability('moodle/course:update', $context, $userid)) {
             return array('authorized' => 3);
-        }elseif(has_capability('mod/assign:grade', $context, $userid)){
+        } elseif (has_capability('mod/assign:grade', $context, $userid)) {
             return array('authorized' => 2);
-        }else{
+        } else {
             return array('authorized' => 1);
         }
     }
 
-    public static function check_user_returns(){
+    public static function check_user_returns()
+    {
         return new external_single_structure(
             array(
                 'authorized' => new external_value(PARAM_INT, 'Authorized')

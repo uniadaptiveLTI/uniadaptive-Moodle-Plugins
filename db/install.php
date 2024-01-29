@@ -1,13 +1,19 @@
 <?php
-function xmldb_local_uniadaptive_install() {
+
+
+
+function xmldb_local_uniadaptive_install()
+{
     global $CFG, $DB;
+    require_once($CFG->dirroot . '/user/lib.php');
     require_once($CFG->libdir . "/externallib.php");
 
     // Define the service.
     $servicerecord = new stdClass;
-    $servicerecord->name = 'UNIADAPTIVE';
+    $servicerecord->name = 'UNIAdaptive';
     $servicerecord->requiredcapability = '';
-    $servicerecord->restrictedusers = 0;
+    $servicerecord->restrictedusers = 1;
+    $servicerecord->shortname = 'uniadaptive';
     $servicerecord->enabled = 1;
     $servicerecord->timecreated = time(); // Add this line
 

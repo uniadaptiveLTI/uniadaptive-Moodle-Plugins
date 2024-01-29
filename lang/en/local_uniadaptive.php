@@ -1,2 +1,2 @@
 <?php
-$string['pluginname'] = 'UniAdaptive';
+$string['pluginname'] = 'UNIAdaptive';
