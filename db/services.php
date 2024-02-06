@@ -139,5 +139,14 @@ $functions = array(
         'type'        => 'read',
         'ajax'        => true,
         'loginrequired' => true,
+    ),
+    'local_uniadaptive_check_token' => array(
+        'classname'   => 'local_uniadaptive_external',
+        'methodname'  => 'check_token',
+        'classpath'   => 'local/uniadaptive/externallib.php',
+        'description' => 'check token valid.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
     )
 );

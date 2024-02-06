@@ -12,6 +12,29 @@ UNIAdaptiveLTI-Moodle-Plugin is a plugin that allows adding webservice for the c
 - Lists modules and allows excluding by types
 - Gets the list of ids of modules by sections
 
+- Add role.
+  The plugin creates a role ready to be added to the user for consumption of web services. This is configured to be added from systems, this is the list of permissions it must have :
+  - gradereport/user:view
+  - moodle/course:managegroups
+  - moodle/course:view
+  - moodle/course:viewhiddencourses
+  - moodle/course:viewhiddensections
+  - moodle/course:viewparticipants
+  - moodle/user:viewdetails
+  - moodle/user:viewhiddendetails
+  - webservice/rest:use
+  - mod/assign:view
+  - mod/data:view
+  - mod/feedback
+  - mod/glossary
+  - mod/h5pactivity
+  - mod/lti:views
+  - mod/quiz:view
+  - mod/workshop:view
+  - moodle/course:ignoreavailabilityrestrictions
+  - moodle/course:viewhiddenactivities
+  - moodle/site:accessallgroups
+
 ## Requirements
 
 - Moodle 3.9.X or higher
@@ -44,6 +67,7 @@ UNIAdaptiveLTI-Moodle-Plugin is a plugin that allows adding webservice for the c
   - local_uniadaptive_get_module_data
   - local_uniadaptive_get_course_grade_id
   - local_uniadaptive_check_user'
+  - local_uniadaptive_check_token'
 
 ## License
 
