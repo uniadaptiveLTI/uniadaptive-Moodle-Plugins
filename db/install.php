@@ -6,14 +6,14 @@ function xmldb_local_uniadaptive_install()
 {
     global $CFG, $DB;
     require_once($CFG->dirroot . '/user/lib.php');
-    require_once($CFG->libdir . '/externallib.php');
+    require_once($CFG->libdir . "/externallib.php");
 
     // Define the service.
     $servicerecord = new stdClass;
-    $servicerecord->name = get_string('pluginname', 'local_uniadaptive');
+    $servicerecord->name = 'UNIAdaptive';
     $servicerecord->requiredcapability = '';
     $servicerecord->restrictedusers = 1;
-    $servicerecord->shortname = get_string('pluginshortname', 'local_uniadaptive');
+    $servicerecord->shortname = 'uniadaptive';
     $servicerecord->enabled = 1;
     $servicerecord->timecreated = time(); // Add this line
 
@@ -28,9 +28,6 @@ function xmldb_local_uniadaptive_install()
     } else {
         // If the service does not exist, insert it.
         $serviceid = $DB->insert_record('external_services', $servicerecord);
-        if (!$serviceid) {
-            throw new Exception('Error to insert the service.');
-        }
     }
 
     // Define the functions that should be included in the service.
@@ -66,67 +63,27 @@ function xmldb_local_uniadaptive_install()
         'local_uniadaptive_update_course',
         'local_uniadaptive_get_module_data',
         'local_uniadaptive_get_course_grade_id',
-        'local_uniadaptive_check_user',
-        'local_uniadaptive_check_token'
+        'local_uniadaptive_check_user'
+        // Add any other function names here.
     );
 
     // Add the functions to the service.
     foreach ($functions as $function) {
-        // If the service already existed, check if the function already exists in the service.
-        $existing_function = $DB->get_record('external_services_functions', array('externalserviceid' => $serviceid, 'functionname' => $function));
+        if ($existing_service) {
+            // If the service already existed, check if the function already exists in the service.
+            $existing_function = $DB->get_record('external_services_functions', array('externalserviceid' => $serviceid, 'functionname' => $function));
 
-        if ($existing_function) {
-            // If the function already exists in the service, skip to the next function.
-            continue;
+            if ($existing_function) {
+                // If the function already exists in the service, skip to the next function.
+                continue;
+            }
         }
 
         // If the function does not exist in the service or if the service did not exist, insert it.
         $functionrecord = new stdClass;
         $functionrecord->externalserviceid = $serviceid;
         $functionrecord->functionname = $function;
-        if (!$DB->insert_record('external_services_functions', $functionrecord)) {
-            throw new Exception('Error to insert the function.');
-        }
-    }
-
-    $shortname = get_string('pluginshortname', 'local_uniadaptive');
-
-    if (!$DB->record_exists('role', array('shortname' => $shortname))) {
-        $fullname = get_string('pluginname', 'local_uniadaptive');
-        $description = get_string('pluginroledescription', 'local_uniadaptive');
-
-        $roleid = create_role($fullname, $shortname, $description);
-
-        $capabilities = array(
-            'gradereport/user:view',
-            'moodle/course:managegroups',
-            'moodle/course:view',
-            'moodle/course:viewhiddencourses',
-            'moodle/course:viewhiddensections',
-            'moodle/course:viewparticipants',
-            'moodle/user:viewdetails',
-            'moodle/user:viewhiddendetails',
-            'webservice/rest:use',
-            'mod/assign:view',
-            'mod/data:view',
-            'mod/feedback:view',
-            'mod/glossary:view',
-            'mod/h5pactivity:view',
-            'mod/lti:view',
-            'mod/quiz:view',
-            'mod/workshop:view',
-            'moodle/course:ignoreavailabilityrestrictions',
-            'moodle/course:viewhiddenactivities',
-            'moodle/site:accessallgroups'
-        );
-
-        foreach ($capabilities as $capability) {
-            assign_capability($capability, CAP_ALLOW, $roleid, context_system::instance()->id);
-        }
-
-        $contextlevels = array(CONTEXT_SYSTEM);
-
-        set_role_contextlevels($roleid, $contextlevels);
+        $DB->insert_record('external_services_functions', $functionrecord);
     }
 
     return true;

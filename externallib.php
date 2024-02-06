@@ -1,6 +1,7 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
-require_once("$CFG->libdir/externallib.php");
+
+require_once($CFG->libdir . "/externallib.php");
 
 class local_uniadaptive_external extends external_api
 {
@@ -134,6 +135,7 @@ class local_uniadaptive_external extends external_api
             }
             $id = $badgeData['id'];
             $newcriterias = $badgeData['conditions'];
+            // error_log('Longitud: '.count($newcriterias));
             if (!is_array($newcriterias)) {
                 throw new moodle_exception('Invalid conditions data');
             }
@@ -543,11 +545,11 @@ class local_uniadaptive_external extends external_api
         $sections = $DB->get_records('course_sections', array('course' => $courseid), '', 'id, sequence');
         foreach ($sections as $section) {
             $array = explode(",", $section->sequence);
-
+            // error_log(json_encode($array));
             $section->sequence = array_map('intval', $array);
             foreach ($section->sequence as $key => $sequence) {
                 if ($sequence == 0) {
-
+                    // array_push($sections, $sequence);
                     unset($section->sequence[$key]);
                 }
             }
@@ -868,6 +870,7 @@ class local_uniadaptive_external extends external_api
                                         'gradepass' => $gradepass < 1 ? 0 : $gradepass,
                                         'grademax' => $grademax < 1 ? 100 : $grademax,
                                         'gradetype' => $module['g']['hasConditions'] && $module['g']['hasToBeQualified'] ? 1 : 3
+                                        //AQUI
                                     ));
                                     break;
                             }
@@ -878,6 +881,7 @@ class local_uniadaptive_external extends external_api
                                 case 'glossary':
                                 case 'quiz':
                                 case 'workshop':
+                                    // error_log('ENTRO');
                                     $data_item = $DB->get_record($module_record->name, array('id' => $course_module->instance, 'course' => $course_module->course));
                                     $DB->update_record($module_record->name, (object)array(
                                         'id' => $course_module->instance,
@@ -946,12 +950,14 @@ class local_uniadaptive_external extends external_api
             if ($badges !== null && is_array($badges) && count($badges) > 0) {
                 foreach ($badges as $badgeData) {
                     if (!isset($badgeData['id'])) {
+                        // throw new moodle_exception('Invalid badge data');
                         return array('status' => false, 'error' => 'INVALID_BADGE_DATA');
                     }
                     $id = $badgeData['id'];
                     $newcriterias = $badgeData['conditions'];
                     $badge = $DB->get_record('badge', array('id' => $id));
                     if (!$badge) {
+                        // throw new moodle_exception('Badge not found');
                         return array('status' => false, 'error' => 'BADGE_NOT_FOUND');
                     }
                     // Delete existing criteria
@@ -1015,7 +1021,6 @@ class local_uniadaptive_external extends external_api
     }
     public static function get_module_data($moduleid, $itemmodule)
     {
-
         global $DB;
         // Get the data from mdl_course_modules
         $course_module = $DB->get_record('course_modules', array('id' => $moduleid), 'completion, completionview, completiongradeitemnumber, instance');
@@ -1032,6 +1037,7 @@ class local_uniadaptive_external extends external_api
             case 'workshop':
             case 'choice':
             case 'glossary':
+                // error_log('ENTRO');
                 $module_data = $DB->get_record($itemmodule, array('id' => $module_instance_id));
                 if ($module_data != '') {
                     $result = [
@@ -1045,6 +1051,8 @@ class local_uniadaptive_external extends external_api
                         ],
                     ];
                 }
+                // error_log(json_encode($result));
+                // error_log('SALGO');
                 return array('status' => true, 'error' => '', 'data' => $result);
                 break;
                 // Add here more cases for other module types
@@ -1061,6 +1069,7 @@ class local_uniadaptive_external extends external_api
                 ];
                 return array('status' => true, 'error' => 'NOT_SUPPORTED', 'data' => $result);
                 break;
+                // throw new Exception("Tipo de módulo no soportado: " . $itemmodule);
         }
     }
     public static function get_module_data_returns()
@@ -1100,6 +1109,7 @@ class local_uniadaptive_external extends external_api
 
     public static function check_user($courseid, $userid)
     {
+        error_log('ENTRO EN check_user');
         $context = context_course::instance($courseid);
         self::validate_context($context);
         if (has_capability('moodle/site:config', $context, $userid)) {
@@ -1118,27 +1128,6 @@ class local_uniadaptive_external extends external_api
         return new external_single_structure(
             array(
                 'authorized' => new external_value(PARAM_INT, 'Authorized')
-            )
-        );
-    }
-
-    public static function check_token_parameters()
-    {
-        return new external_function_parameters(
-            []
-        );
-    }
-
-    public static function check_token()
-    {
-        return ['result' => true];
-    }
-
-    public static function check_token_returns()
-    {
-        return new external_single_structure(
-            array(
-                'result' => new external_value(PARAM_RAW, 'Check Result'),
             )
         );
     }
