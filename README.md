@@ -73,4 +73,10 @@ UNIAdaptiveLTI-Moodle-Plugin is a plugin that allows adding webservice for the c
 
 UNIAdaptiveLTI-Moodle-Plugin is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).
 
-![EN-Funded by the EU-BLACK Outline](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/eb8bbed6-29ba-47ed-96b9-86cac9437aea)
+## Sponsor
+
+![ES-Financiado por la Unión Europea-BLACK Outline](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/5d24c976-6188-4fec-a0fc-e1b671c32f3e)
+![LOGO NEGATIVO](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/079fd609-5306-49e6-a04b-3808a624f0a7)
+
+
+Financiado por la Unión Europea - NextGenerationEU
