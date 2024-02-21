@@ -75,8 +75,6 @@ UNIAdaptiveLTI-Moodle-Plugin is licensed under the [GNU General Public License v
 
 ## Sponsor
 
-![ES-Financiado por la Unión Europea-BLACK Outline](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/5d24c976-6188-4fec-a0fc-e1b671c32f3e)
-![LOGO NEGATIVO](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/079fd609-5306-49e6-a04b-3808a624f0a7)
+![LOGOPOSITIVO](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/355b0573-3939-4081-be8d-2b6fc17fde37)
+![ES_Financiado_por_la_Unión_Europea_RGB_BLACK_Outline](https://github.com/uniadaptiveLTI/uniadaptive-Moodle-Plugins/assets/91719773/136dadc8-cb32-4497-a226-300dcdc4f6cc)
 
-
-Financiado por la Unión Europea - NextGenerationEU
